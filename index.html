@@ -285,7 +285,14 @@
 </div>
 <div class="copy-toast" id="copy-toast"></div>
 
-<script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" onload="initSupabase()"></script>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+try {
+    window._supabase = createClient('https://nhiuyoblekdpqdnyhplh.supabase.co', 'sb_publishable_S_2swVLOXHLXGLllbYpR9A_Wmc5pm1W');
+    window.supabaseReady = true;
+    if(typeof initSupabase === 'function') initSupabase();
+} catch(e){ console.warn('Supabase module load failed:', e); }
+</script>
 <script>
 // ==================== Config ====================
 const SUPABASE_URL = 'https://nhiuyoblekdpqdnyhplh.supabase.co';
@@ -293,14 +300,18 @@ const SUPABASE_ANON_KEY = 'sb_publishable_S_2swVLOXHLXGLllbYpR9A_Wmc5pm1W';
 let supabase = null;
 function initSupabase(){
     try {
-        const lib = window.supabase;
-        if(lib && lib.createClient){
-            supabase = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('Supabase connected');
+        if(window._supabase){
+            supabase = window._supabase;
+            console.log('Supabase connected (ESM)');
+            const badge = document.getElementById('supabase-status');
+            if(badge){badge.textContent='云端已连接';badge.style.color='var(--accent-green)';}
+        } else if(window.supabase && window.supabase.createClient){
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase connected (UMD)');
             const badge = document.getElementById('supabase-status');
             if(badge){badge.textContent='云端已连接';badge.style.color='var(--accent-green)';}
         } else {
-            console.warn('Supabase library not found on window');
+            console.warn('Supabase library not available');
         }
     } catch(e){ console.warn('Supabase init failed:', e); }
 }
