@@ -59,19 +59,27 @@
         .login-btn:hover { filter: brightness(1.1); }
         .login-error { color: var(--accent-red); font-size: 0.78rem; margin-top: 8px; display: none; }
 
-        .app { display: none; } .app.visible { display: block; }
+        .app { display: none; } .app.visible { display: flex; height: 100vh; }
+        .sidebar { width: 180px; min-width: 180px; height: 100vh; background: var(--bg-secondary); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; position: sticky; top: 0; }
+        .sidebar-logo { padding: 20px 16px 16px; border-bottom: 1px solid var(--border-color); }
+        .sidebar-logo h1 { font-size: 1.1rem; font-weight: 700; color: var(--accent-cyan); letter-spacing: 1px; }
+        .sidebar-logo .subtitle { color: var(--text-muted); font-size: 0.62rem; margin-top: 3px; line-height: 1.4; }
+        .sidebar-nav { flex: 1; padding: 12px 8px; }
+        .sidebar-item { display: flex; align-items: center; gap: 9px; padding: 10px 14px; border-radius: 7px; cursor: pointer; font-size: 0.78rem; color: var(--text-muted); font-weight: 500; transition: all 0.15s; border-left: 3px solid transparent; margin-bottom: 2px; }
+        .sidebar-item:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .sidebar-item.active { color: var(--accent-cyan); background: var(--accent-dim); border-left-color: var(--accent-blue); }
+        .sidebar-item .nav-icon { font-size: 0.9rem; width: 18px; text-align: center; }
+        .sidebar-bottom { padding: 12px; border-top: 1px solid var(--border-color); }
+        .sidebar-bottom .supabase-status { font-size: 0.6rem; color: var(--text-muted); margin-bottom: 8px; padding: 0 6px; }
+        .sidebar-bottom .sidebar-user { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-radius: 6px; background: var(--bg-tertiary); }
+        .sidebar-bottom .user-badge { padding: 3px 0; background: none; border: none; font-size: 0.7rem; color: var(--accent-cyan); cursor: pointer; }
+        .sidebar-bottom .user-badge:hover { color: var(--text-primary); }
+        .sidebar-bottom .theme-toggle { padding: 3px 8px; font-size: 0.62rem; }
+        .main-content { flex: 1; overflow-y: auto; height: 100vh; }
         .container { max-width: 1700px; margin: 0 auto; padding: 16px 22px; }
-        header { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 16px; }
-        .header-left h1 { font-size: 1.4rem; font-weight: 700; color: var(--accent-cyan); letter-spacing: 2px; }
-        .header-left .subtitle { color: var(--text-muted); font-size: 0.72rem; margin-top: 2px; }
-        .header-right { display: flex; align-items: center; gap: 8px; }
-        .user-badge { padding: 5px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 16px; font-size: 0.72rem; color: var(--accent-cyan); cursor: pointer; }
-        .user-badge:hover { border-color: var(--accent-blue); }
-
-        .nav-tabs { display: flex; gap: 2px; background: var(--bg-tertiary); border-radius: 8px; padding: 3px; margin-bottom: 16px; width: fit-content; border: 1px solid var(--border-color); }
-        .nav-tab { padding: 7px 16px; border: none; background: transparent; color: var(--text-muted); font-size: 0.78rem; font-family: inherit; cursor: pointer; border-radius: 6px; font-weight: 500; transition: all 0.2s; }
-        .nav-tab:hover { color: var(--text-secondary); }
-        .nav-tab.active { background: var(--accent-dim); color: var(--accent-cyan); border: 1px solid var(--accent-blue); }
+        .user-menu { position: relative; }
+        .user-badge { font-size: 0.72rem; color: var(--accent-cyan); cursor: pointer; }
+        .user-badge:hover { color: var(--text-primary); }
 
         .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
         .card-title { font-size: 0.84rem; font-weight: 600; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); color: var(--accent-cyan); }
@@ -210,17 +218,19 @@
 </div>
 
 <div class="app" id="main-app">
-<div class="container">
-    <header>
-        <div class="header-left">
-            <h1>URS-SAtest</h1>
-            <div class="subtitle">问卷样本量计算器 | Qunar-URS数据运营工具</div>
-        </div>
-        <div class="header-right">
-            <span id="supabase-status" style="font-size:0.62rem;color:var(--text-muted);margin-right:6px;">云端连接中...</span>
-            <div class="theme-toggle" onclick="toggleTheme()" title="切换主题">
-                <span id="theme-icon">🌙</span><span id="theme-label">深色</span>
-            </div>
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <h1>URS-SAtest</h1>
+        <div class="subtitle">问卷样本量计算器<br>Qunar-URS数据运营工具</div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="sidebar-item active" data-tab="calc" onclick="switchTab('calc')"><span class="nav-icon">&#9635;</span>计算器</div>
+        <div class="sidebar-item" data-tab="report" onclick="switchTab('report')"><span class="nav-icon">&#9673;</span>周期观测报告</div>
+        <div class="sidebar-item" data-tab="history" onclick="switchTab('history')"><span class="nav-icon">&#9719;</span>历史记录</div>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="supabase-status" id="supabase-status">云端连接中...</div>
+        <div class="sidebar-user">
             <div class="user-menu">
                 <span class="user-badge" id="user-badge" onclick="toggleUserMenu()"></span>
                 <div class="user-menu-dropdown" id="user-menu-dd">
@@ -228,14 +238,14 @@
                     <div class="user-menu-item" onclick="doLogout()">退出登录</div>
                 </div>
             </div>
+            <div class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+                <span id="theme-icon">&#127769;</span><span id="theme-label">深色</span>
+            </div>
         </div>
-    </header>
-
-    <div class="nav-tabs">
-        <button class="nav-tab active" data-tab="calc" onclick="switchTab('calc')">计算器</button>
-        <button class="nav-tab" data-tab="report" onclick="switchTab('report')">周期观测报告</button>
-        <button class="nav-tab" data-tab="history" onclick="switchTab('history')">历史记录</button>
     </div>
+</aside>
+<div class="main-content">
+<div class="container">
 
     <!-- Calculator Tab -->
     <div id="tab-calc">
@@ -317,6 +327,7 @@
     </div>
 
     <div class="watermark">URS-SAtest v4.0 | Qunar-URS数据运营工具 &copy; 2026</div>
+</div>
 </div>
 </div>
 <div class="copy-toast" id="copy-toast"></div>
@@ -493,7 +504,7 @@ function calcCI(se,lv){return Z_CI[lv]*se;}
 
 // ==================== Tabs ====================
 function switchTab(tab){
-    document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+    document.querySelectorAll('.sidebar-item').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
     ['calc','report','history'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===tab?'block':'none';});
     if(tab==='report')renderReport();
     if(tab==='history')renderHistory();
