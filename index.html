@@ -563,6 +563,7 @@ function validateData(){
             if(p!==null&&p>0&&p<1&&w===null&&d['w_'+pg]==='')errors.push(`${label} ${pg}页填写了得分但缺少对应权重w`);
         }
         if(ws.length>0){const sum=ws.reduce((a,b)=>a+b,0);if(Math.abs(sum-1)>0.01)errors.push(`${label} 各页面权重之和=${(sum*100).toFixed(1)}%，应为100%（允许±1%误差）`);}
+        if(nTotal!==null){const pageNs=PAGES.map(pg=>pi(d['n_'+pg])).filter(v=>v!==null);if(pageNs.length>0){const pageSum=pageNs.reduce((a,b)=>a+b,0);if(pageSum!==nTotal)errors.push(`${label} 各页面样本量之和(${pageSum.toLocaleString()})≠整体样本量(${nTotal.toLocaleString()})`);}}
     }
     return errors;
 }
