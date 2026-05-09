@@ -187,7 +187,7 @@
     <header>
         <div class="header-left">
             <h1>URS-SAtest</h1>
-            <div class="subtitle">问卷样本量计算器 | URS数据科学团队</div>
+            <div class="subtitle">问卷样本量计算器 | Qunar-URS数据运营工具</div>
         </div>
         <div class="header-right">
             <span id="supabase-status" style="font-size:0.62rem;color:var(--text-muted);margin-right:6px;">云端连接中...</span>
@@ -280,7 +280,7 @@
         </div>
     </div>
 
-    <div class="watermark">URS-SAtest v4.0 | URS数据科学团队 &copy; 2026</div>
+    <div class="watermark">URS-SAtest v4.0 | Qunar-URS数据运营工具 &copy; 2026</div>
 </div>
 </div>
 <div class="copy-toast" id="copy-toast"></div>
@@ -498,6 +498,8 @@ let lastResults=[];
 function calculateAll(){
     const ps=document.getElementById('inp-period-start').value,pe=document.getElementById('inp-period-end').value;
     if(!ps||!pe){alert('请选择观察周期');return;}
+    const hasAnyData=tableRows.some(r=>Object.values(r.data).some(v=>v&&String(v).trim()!==''));
+    if(!hasAnyData){alert('未填写任何数据，请先填写后再计算');return;}
     const alpha=parseFloat(document.getElementById('inp-alpha').value)||0.2;
     const power=parseFloat(document.getElementById('inp-power').value)||0.6;
     const mdeTarget=parseFloat(document.getElementById('inp-mde-target').value)||0.01;
