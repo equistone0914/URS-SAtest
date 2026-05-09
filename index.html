@@ -17,11 +17,36 @@
             --shadow-glow: 0 0 15px rgba(0,180,216,0.15); --radius: 10px;
             --cell-input-bg: rgba(36,52,71,0.85); --cell-calc-bg: rgba(0,180,216,0.12);
         }
+        [data-theme="light"] {
+            --bg-primary: #f5f7fa; --bg-secondary: #ffffff; --bg-tertiary: #edf0f4;
+            --bg-card: #ffffff; --border-color: #dce1e8; --border-light: #c8d0da;
+            --text-primary: #1a2634; --text-secondary: #4a5e73; --text-muted: #8295a8;
+            --accent-blue: #0077b6; --accent-cyan: #0096c7; --accent-green: #059669;
+            --accent-teal: #0d9488; --accent-orange: #d97706; --accent-red: #dc2626;
+            --accent-purple: #6d28d9; --accent-dim: rgba(0,119,182,0.08);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08); --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-glow: 0 0 8px rgba(0,119,182,0.08);
+            --cell-input-bg: rgba(237,240,244,0.9); --cell-calc-bg: rgba(0,119,182,0.06);
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Noto Sans SC', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg-tertiary); }
         ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+        [data-theme="light"] ::-webkit-scrollbar-track { background: #edf0f4; }
+        [data-theme="light"] ::-webkit-scrollbar-thumb { background: #c8d0da; }
+        [data-theme="light"] .auth-overlay { background: linear-gradient(135deg, #e8f0f8, #d1e3f0, #b8d4e8); }
+        [data-theme="light"] .login-btn { background: linear-gradient(135deg, #0077b6, #0096c7); }
+        [data-theme="light"] .period-inputs input[type="date"] { color-scheme: light; }
+        [data-theme="light"] .report-filter input[type="date"] { color-scheme: light; }
+        .theme-toggle { display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 10px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-tertiary); font-size: 0.68rem; color: var(--text-secondary); transition: all 0.2s; }
+        .theme-toggle:hover { border-color: var(--accent-blue); color: var(--text-primary); }
+        .user-menu { position: relative; }
+        .user-menu-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 6px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: var(--shadow-md); z-index: 200; min-width: 140px; padding: 4px; }
+        .user-menu-dropdown.open { display: block; }
+        .user-menu-item { padding: 7px 12px; font-size: 0.72rem; color: var(--text-secondary); cursor: pointer; border-radius: 5px; display: flex; align-items: center; gap: 6px; }
+        .user-menu-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
 
         /* Auth */
         .auth-overlay { position: fixed; inset: 0; z-index: 9999; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); display: flex; align-items: center; justify-content: center; }
@@ -193,7 +218,16 @@
         </div>
         <div class="header-right">
             <span id="supabase-status" style="font-size:0.62rem;color:var(--text-muted);margin-right:6px;">云端连接中...</span>
-            <span class="user-badge" id="user-badge" onclick="changeUsername()" title="点击修改"></span>
+            <div class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+                <span id="theme-icon">🌙</span><span id="theme-label">深色</span>
+            </div>
+            <div class="user-menu">
+                <span class="user-badge" id="user-badge" onclick="toggleUserMenu()"></span>
+                <div class="user-menu-dropdown" id="user-menu-dd">
+                    <div class="user-menu-item" onclick="changeUsername()">✏️ 修改昵称</div>
+                    <div class="user-menu-item" onclick="doLogout()">🚪 退出登录</div>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -331,7 +365,7 @@ const HEADER_GROUPS = [
     {label:'基本信息',cols:4,color:'90,122,148',rowspan:2},
     {label:'实际得分 p',cols:6,color:'0,180,216',rowspan:2},
     {label:'实际样本量 n',cols:6,color:'6,214,160',rowspan:2},
-    {label:'DAU流量占比',cols:5,color:'244,162,97',rowspan:2},
+    {label:'投流占比',cols:5,color:'244,162,97',rowspan:2},
     {label:'DAU权重分布 w',cols:5,color:'123,104,238',rowspan:2},
     {label:'精度→最小样本量',cols:7,color:'46,196,182',rowspan:2},
     {label:'样本量→当前精度',cols:30,color:'239,71,111',rowspan:1}
@@ -398,8 +432,38 @@ function enterApp(){
 }
 function changeUsername(){
     const n=prompt('修改昵称/工号:',currentUser);
-    if(n&&n.trim()){currentUser=n.trim();localStorage.setItem('urs-satest-username',currentUser);document.getElementById('user-badge').textContent=currentUser;}
+    if(n&&n.trim()){
+        if(!ALLOWED_USERS.includes(n.trim())){alert('该用户不在允许列表中');return;}
+        currentUser=n.trim();localStorage.setItem('urs-satest-username',currentUser);document.getElementById('user-badge').textContent=currentUser;
+    }
+    closeUserMenu();
 }
+function doLogout(){
+    localStorage.removeItem('urs-satest-auth');localStorage.removeItem('urs-satest-username');
+    location.reload();
+}
+function toggleUserMenu(){const dd=document.getElementById('user-menu-dd');dd.classList.toggle('open');}
+function closeUserMenu(){document.getElementById('user-menu-dd').classList.remove('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('.user-menu'))closeUserMenu();});
+
+// ==================== Theme ====================
+function toggleTheme(){
+    const html=document.documentElement;
+    const isDark=html.getAttribute('data-theme')!=='light';
+    html.setAttribute('data-theme',isDark?'light':'dark');
+    localStorage.setItem('urs-satest-theme',isDark?'light':'dark');
+    updateThemeUI();
+}
+function updateThemeUI(){
+    const isLight=document.documentElement.getAttribute('data-theme')==='light';
+    document.getElementById('theme-icon').textContent=isLight?'☀️':'🌙';
+    document.getElementById('theme-label').textContent=isLight?'浅色':'深色';
+}
+(function initTheme(){
+    const saved=localStorage.getItem('urs-satest-theme');
+    if(saved)document.documentElement.setAttribute('data-theme',saved);
+    document.addEventListener('DOMContentLoaded',updateThemeUI);
+})();
 (function autoLogin(){
     if(localStorage.getItem('urs-satest-auth')==='1'){
         const saved=localStorage.getItem('urs-satest-username');
@@ -517,7 +581,7 @@ function renderInputTable(){
         {group:'实际得分 p',cls:'col-p',cols:[{id:'p_total',label:'总计'},...PAGES.map(p=>({id:'p_'+p,label:p}))]},
         {group:'实际样本量 n',cls:'col-n',cols:[{id:'n_total',label:'总计'},...PAGES.map(p=>({id:'n_'+p,label:p}))]},
         {group:'投流占比',cls:'col-t',cols:PAGES.map(p=>({id:'t_'+p,label:p}))},
-        {group:'加权权重 w',cls:'col-w',cols:PAGES.map(p=>({id:'w_'+p,label:p}))},
+        {group:'DAU权重分布 w',cls:'col-w',cols:PAGES.map(p=>({id:'w_'+p,label:p}))},
     ];
     let allCols=[];fields.forEach(f=>f.cols.forEach(c=>allCols.push({...c,cls:f.cls})));
     let html='<thead><tr class="col-group-header"><th colspan="2"></th>';
@@ -659,16 +723,18 @@ function renderAllResults(){
     allRows.forEach(row=>{h+='<tr>';row.forEach((v,i)=>h+=`<td style="white-space:nowrap;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${v!=null?v:'-'}</td>`);h+='</tr>';});
     h+='</tbody></table></div>';document.getElementById('result-excel').innerHTML=h;
 
-    // Suggestions
-    let msgs=[];
+    // Suggestions - split into 样本量 and 精度 dimensions
+    let sampleMsgs=[],mdeMsgs=[];
     for(const r of lastResults){
-        if(r.nTotal&&r.minNTotal&&r.nTotal<r.minNTotal)msgs.push(`<strong>${r.module}：</strong>整体样本量不足`);
-        const insuf=r.activePages.filter(pg=>r.pageData[pg].n&&r.minNPages[pg]&&r.pageData[pg].n<r.minNPages[pg]);
-        if(insuf.length)msgs.push(`<strong>${r.module}：</strong>${insuf.map(pg=>pg+'页').join('、')}样本量不足`);
-        if(r.mdeTotal&&r.mdeTotal>0.01)msgs.push(`<strong>${r.module}：</strong>整体MDE=${(r.mdeTotal*100).toFixed(2)}% > 1%`);
-        r.activePages.forEach(pg=>{if(r.mdePages[pg]&&r.mdePages[pg]>0.02)msgs.push(`<strong>${r.module} ${pg}页：</strong>MDE=${(r.mdePages[pg]*100).toFixed(2)}% > 2%`);});
+        if(r.nTotal&&r.minNTotal&&r.nTotal<r.minNTotal)sampleMsgs.push(`<strong>${r.module}：</strong>整体样本量 ${r.nTotal.toLocaleString()} < 最小样本量 ${r.minNTotal.toLocaleString()}`);
+        r.activePages.forEach(pg=>{if(r.pageData[pg].n&&r.minNPages[pg]&&r.pageData[pg].n<r.minNPages[pg])sampleMsgs.push(`<strong>${r.module} ${pg}页：</strong>样本量 ${r.pageData[pg].n.toLocaleString()} < 最小样本量 ${r.minNPages[pg].toLocaleString()}`);});
+        if(r.mdeTotal&&r.mdeTotal>0.01)mdeMsgs.push(`<strong>${r.module}：</strong>整体MDE=${(r.mdeTotal*100).toFixed(2)}% > 1%`);
+        r.activePages.forEach(pg=>{if(r.mdePages[pg]&&r.mdePages[pg]>0.02)mdeMsgs.push(`<strong>${r.module} ${pg}页：</strong>MDE=${(r.mdePages[pg]*100).toFixed(2)}% > 2%`);});
     }
-    document.getElementById('suggestions').innerHTML=msgs.length?`<div style="background:rgba(239,71,111,0.08);border:1px solid rgba(239,71,111,0.25);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:0.74rem;color:var(--accent-red);line-height:1.7;">${msgs.join('<br>')}</div>`:'';
+    let sugHtml='';
+    if(sampleMsgs.length)sugHtml+=`<div style="background:rgba(239,71,111,0.08);border:1px solid rgba(239,71,111,0.25);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:0.74rem;color:var(--accent-red);line-height:1.7;"><div style="font-weight:700;margin-bottom:4px;">⚠ 样本量不足</div>${sampleMsgs.join('<br>')}</div>`;
+    if(mdeMsgs.length)sugHtml+=`<div style="background:rgba(244,162,97,0.08);border:1px solid rgba(244,162,97,0.25);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:0.74rem;color:var(--accent-orange);line-height:1.7;"><div style="font-weight:700;margin-bottom:4px;">⚠ 精度超标</div>${mdeMsgs.join('<br>')}</div>`;
+    document.getElementById('suggestions').innerHTML=sugHtml;
 }
 
 function fmt4(v){return v!=null?v.toFixed(4):'-';}
@@ -793,7 +859,7 @@ async function renderReport(){
 
     let h='<table class="result-table"><thead>'+buildGroupHeaders('录入人')+'<tr>';
     EXCEL_HEADERS.forEach((hd,i)=>h+=`<th style="white-space:nowrap;padding:3px 4px;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${getShortHeader(hd,i)}</th>`);
-    h+='<th>录入人</th></tr></thead><tbody>';
+    h+='</tr></thead><tbody>';
 
     let msgs=[];
     for(const mr of allModuleRows){
