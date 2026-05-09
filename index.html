@@ -109,8 +109,10 @@
         .result-block-title { font-size: 0.78rem; font-weight: 600; color: var(--accent-cyan); }
         .result-block-body { padding: 12px 16px; overflow-x: auto; }
         .result-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
-        .result-table th { text-align: center; padding: 5px 4px; background: var(--bg-tertiary); color: var(--text-secondary); font-weight: 600; font-size: 0.65rem; border-bottom: 2px solid var(--border-color); white-space: nowrap; }
-        .result-table td { text-align: center; padding: 5px 4px; border-bottom: 1px solid var(--border-color); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-primary); }
+        .result-table th { text-align: center; padding: 5px 4px; background: var(--bg-tertiary); color: var(--text-secondary); font-weight: 600; font-size: 0.65rem; border-bottom: 2px solid var(--border-color); border-left: 1px solid var(--border-color); white-space: nowrap; }
+        .result-table th:first-child { border-left: none; }
+        .result-table td { text-align: center; padding: 5px 4px; border-bottom: 1px solid var(--border-color); border-left: 1px solid var(--border-color); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-primary); }
+        .result-table td:first-child { border-left: none; }
         .result-table td.label-cell { text-align: left; font-family: 'Noto Sans SC', sans-serif; font-weight: 500; white-space: nowrap; color: var(--text-secondary); }
         .result-table td.cell-red { color: var(--accent-red); font-weight: 600; }
         .result-table td.cell-green { color: var(--accent-green); }
@@ -336,23 +338,29 @@ const HEADER_GROUPS = [
     {label:'CI置信区间',cols:24,color:'72,202,228',rowspan:1}
 ];
 const CI_SUBGROUPS = [
-    {label:'整体',cols:4},{label:'L页',cols:4},{label:'D页',cols:4},
-    {label:'B页',cols:4},{label:'O页',cols:4},{label:'M页',cols:4}
+    {label:'整体',cols:4,bg:'0.22'},{label:'L页',cols:4,bg:'0.12'},
+    {label:'D页',cols:4,bg:'0.22'},{label:'B页',cols:4,bg:'0.12'},
+    {label:'O页',cols:4,bg:'0.22'},{label:'M页',cols:4,bg:'0.12'}
 ];
+const CI_SHORT_LABELS = ['MDE','CI90','CI95','CI99'];
 function buildGroupHeaders(extraCol){
     const ciColor='72,202,228';
     let r1='<tr>';
     HEADER_GROUPS.forEach(g=>{
-        r1+=`<th colspan="${g.cols}" rowspan="${g.rowspan}" style="background:rgba(${g.color},0.25);color:#fff;font-weight:600;font-size:0.62rem;padding:4px 6px;border-bottom:2px solid rgba(${g.color},0.6);letter-spacing:0.5px;text-align:center;">${g.label}</th>`;
+        r1+=`<th colspan="${g.cols}" rowspan="${g.rowspan}" style="background:rgba(${g.color},0.25);color:#fff;font-weight:600;font-size:0.62rem;padding:4px 6px;border-bottom:2px solid rgba(${g.color},0.6);border-left:1px solid var(--border-color);letter-spacing:0.5px;text-align:center;">${g.label}</th>`;
     });
-    if(extraCol)r1+=`<th rowspan="3" style="background:var(--bg-tertiary);font-size:0.62rem;color:var(--text-secondary);">${extraCol}</th>`;
+    if(extraCol)r1+=`<th rowspan="3" style="background:var(--bg-tertiary);font-size:0.62rem;color:var(--text-secondary);border-left:1px solid var(--border-color);">${extraCol}</th>`;
     r1+='</tr>';
     let r2='<tr>';
     CI_SUBGROUPS.forEach(s=>{
-        r2+=`<th colspan="${s.cols}" style="background:rgba(${ciColor},0.15);color:rgba(255,255,255,0.85);font-size:0.58rem;padding:3px 4px;border-bottom:1px solid rgba(${ciColor},0.4);text-align:center;">${s.label}</th>`;
+        r2+=`<th colspan="${s.cols}" style="background:rgba(${ciColor},${s.bg});color:rgba(255,255,255,0.9);font-size:0.58rem;padding:3px 4px;border-bottom:1px solid rgba(${ciColor},0.4);border-left:1px solid var(--border-color);text-align:center;">${s.label}</th>`;
     });
     r2+='</tr>';
     return r1+r2;
+}
+function getShortHeader(hd,i){
+    if(i>=39&&i<=62){return CI_SHORT_LABELS[(i-39)%4];}
+    return hd;
 }
 const ALLOWED_USERS = ['shutong.yan','wanghao.zhang','xinrui.huang','tian.hao','shi.zhao','yunhong.jiang','shaoyang.xue','chuanyu.wu','xian.chen','xiaofan.yang','chaomachao.ma','yunfeimm.ma','yinghuiw.wang','allen.zhang','yanan.he','yxww.wang'];
 
@@ -535,6 +543,30 @@ function toggleAdvanced(){const c=document.getElementById('advanced-content');c.
 function pf(v){if(!v||v==='-'||v==='')return null;let s=String(v).trim();if(s.endsWith('%')){const n=parseFloat(s);return isNaN(n)?null:n/100;}const n=parseFloat(s);return isNaN(n)?null:n;}
 function pi(v){if(!v||v==='-'||v==='')return null;const s=String(v).trim().replace(/,/g,'');const n=parseInt(s);return isNaN(n)?null:n;}
 
+// ==================== Validation ====================
+function validateData(){
+    const errors=[];
+    for(const row of tableRows){
+        const d=row.data,label=`[${row.business}/${row.module}]`;
+        const pTotal=pf(d.p_total),nTotal=pi(d.n_total);
+        if(pTotal!==null&&(pTotal<=0||pTotal>=1))errors.push(`${label} 整体得分p=${d.p_total}，必须在0~1之间（不含边界）`);
+        if(nTotal!==null&&nTotal<=0)errors.push(`${label} 整体样本量n=${d.n_total}，必须为正整数`);
+        const ws=[];
+        for(const pg of PAGES){
+            const p=pf(d['p_'+pg]),n=pi(d['n_'+pg]),t=pf(d['t_'+pg]),w=pf(d['w_'+pg]);
+            if(p!==null&&(p<=0||p>=1))errors.push(`${label} ${pg}页得分p=${d['p_'+pg]}，必须在0~1之间`);
+            if(n!==null&&n<=0)errors.push(`${label} ${pg}页样本量n=${d['n_'+pg]}，必须为正整数`);
+            if(n!==null&&nTotal!==null&&n>nTotal)errors.push(`${label} ${pg}页样本量(${n})不应超过整体样本量(${nTotal})`);
+            if(t!==null&&(t<0||t>1))errors.push(`${label} ${pg}页投流占比=${d['t_'+pg]}，必须在0~100%之间`);
+            if(w!==null&&(w<=0||w>1))errors.push(`${label} ${pg}页权重w=${d['w_'+pg]}，必须在0~1之间`);
+            if(w!==null)ws.push(w);
+            if(p!==null&&p>0&&p<1&&w===null&&d['w_'+pg]==='')errors.push(`${label} ${pg}页填写了得分但缺少对应权重w`);
+        }
+        if(ws.length>0){const sum=ws.reduce((a,b)=>a+b,0);if(Math.abs(sum-1)>0.01)errors.push(`${label} 各页面权重之和=${(sum*100).toFixed(1)}%，应为100%（允许±1%误差）`);}
+    }
+    return errors;
+}
+
 // ==================== Calculation ====================
 let lastResults=[];
 function calculateAll(){
@@ -542,6 +574,8 @@ function calculateAll(){
     if(!ps||!pe){alert('请选择观察周期');return;}
     const hasAnyData=tableRows.some(r=>Object.values(r.data).some(v=>v&&String(v).trim()!==''));
     if(!hasAnyData){alert('未填写任何数据，请先填写后再计算');return;}
+    const valErrors=validateData();
+    if(valErrors.length){alert('数据校验未通过，请检查后重新提交：\n\n'+valErrors.join('\n'));return;}
     const alpha=parseFloat(document.getElementById('inp-alpha').value)||0.2;
     const power=parseFloat(document.getElementById('inp-power').value)||0.6;
     const mdeTarget=parseFloat(document.getElementById('inp-mde-target').value)||0.01;
@@ -609,7 +643,7 @@ function renderAllResults(){
     // Excel 63col with bg distinction
     const allRows=lastResults.map(r=>buildExcelRow(r));
     h='<div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:4px;">63列 | <span style="background:var(--cell-input-bg);padding:1px 6px;border-radius:3px;">自填列</span> <span style="background:var(--cell-calc-bg);padding:1px 6px;border-radius:3px;">计算列</span></div><div style="overflow-x:auto;max-height:240px;"><table class="result-table" style="font-size:0.63rem;"><thead>'+buildGroupHeaders('')+'<tr>';
-    EXCEL_HEADERS.forEach((hd,i)=>h+=`<th style="white-space:nowrap;padding:3px 4px;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${hd}</th>`);
+    EXCEL_HEADERS.forEach((hd,i)=>h+=`<th style="white-space:nowrap;padding:3px 4px;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${getShortHeader(hd,i)}</th>`);
     h+='</tr></thead><tbody>';
     allRows.forEach(row=>{h+='<tr>';row.forEach((v,i)=>h+=`<td style="white-space:nowrap;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${v!=null?v:'-'}</td>`);h+='</tr>';});
     h+='</tbody></table></div>';document.getElementById('result-excel').innerHTML=h;
@@ -747,7 +781,7 @@ async function renderReport(){
     }
 
     let h='<table class="result-table"><thead>'+buildGroupHeaders('录入人')+'<tr>';
-    EXCEL_HEADERS.forEach((hd,i)=>h+=`<th style="white-space:nowrap;padding:3px 4px;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${hd}</th>`);
+    EXCEL_HEADERS.forEach((hd,i)=>h+=`<th style="white-space:nowrap;padding:3px 4px;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${getShortHeader(hd,i)}</th>`);
     h+='<th>录入人</th></tr></thead><tbody>';
 
     let msgs=[];
