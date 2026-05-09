@@ -951,7 +951,79 @@ function copyReport(){
         navigator.clipboard.writeText(text).then(()=>showToast('已复制'));
     });
 }
-function exportReportAll(){document.getElementById('report-start').value='';document.getElementById('report-end').value='';copyReport();}
+function exportReportAll(){
+    fetchReport().then(report=>{
+        const fs=document.getElementById('report-start').value,fe=document.getElementById('report-end').value;
+        const activeKey=fs&&fe?getPeriodKey(fs,fe):'';
+        const filtered=activeKey?report.filter(r=>r.period_key===activeKey):report;
+        const periodLabel=activeKey?formatPeriodLabel(fs,fe):'全部周期';
+
+        // Build all module rows
+        const dataMap={};
+        filtered.forEach(r=>{dataMap[r.business+'||'+r.module]=r;});
+        const allModuleRows=[];
+        for(const biz of Object.keys(MODULE_LIST))for(const mod of MODULE_LIST[biz])allModuleRows.push({business:biz,module:mod});
+
+        // Collect data rows and warnings
+        const dataRows=[];
+        let sampleWarns=[],mdeWarns=[];
+        for(const mr of allModuleRows){
+            const entry=dataMap[mr.business+'||'+mr.module];
+            const r=entry||{business:mr.business,module:mr.module,period_label:periodLabel,user_name:''};
+            const d=entry?entry.data||{}:{};
+            dataRows.push({row:buildReportRow(r,d),user:entry?r.user_name||'-':''});
+            if(entry){
+                if(d.nTotal&&d.minNTotal&&d.nTotal<d.minNTotal)sampleWarns.push(`${mr.business}/${mr.module}：整体 ${d.nTotal}/${d.minNTotal} (缺${d.minNTotal-d.nTotal})`);
+                const ap=PAGES.filter(pg=>d.pageData&&d.pageData[pg]&&d.pageData[pg].p>0&&d.pageData[pg].p<1&&d.pageData[pg].w>0);
+                ap.forEach(pg=>{if(d.pageData[pg].n&&d.minNPages&&d.minNPages[pg]&&d.pageData[pg].n<d.minNPages[pg])sampleWarns.push(`${mr.business}/${mr.module}：${pg}页 ${d.pageData[pg].n}/${d.minNPages[pg]} (缺${d.minNPages[pg]-d.pageData[pg].n})`);});
+                if(d.mdeTotal&&d.mdeTotal>0.01)mdeWarns.push(`${mr.business}/${mr.module}：整体MDE=${(d.mdeTotal*100).toFixed(2)}% > 1%`);
+                ap.forEach(pg=>{if(d.mdePages&&d.mdePages[pg]&&d.mdePages[pg]>0.02)mdeWarns.push(`${mr.business}/${mr.module}：${pg}页MDE=${(d.mdePages[pg]*100).toFixed(2)}% > 2%`);});
+            }
+        }
+
+        // Build Excel HTML (two sheets via worksheets)
+        let xml='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+        xml+='<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>';
+        xml+='<x:ExcelWorksheet><x:Name>观测数据</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>';
+        xml+='<x:ExcelWorksheet><x:Name>监测结果</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>';
+        xml+='</x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>';
+
+        // Sheet 1: Data
+        xml+='<table border="1" style="border-collapse:collapse;">';
+        xml+='<tr>'+EXCEL_HEADERS.map(h=>`<th style="background:#dce6f1;font-weight:bold;font-size:11px;white-space:nowrap;">${h}</th>`).join('')+'<th style="background:#dce6f1;font-weight:bold;">录入人</th></tr>';
+        dataRows.forEach(dr=>{xml+='<tr>'+dr.row.map(v=>`<td style="font-size:11px;">${v}</td>`).join('')+`<td>${dr.user}</td></tr>`;});
+        xml+='</table>';
+
+        // Sheet 2: Warnings
+        xml+='<br style="page-break-before:always">';
+        xml+='<table border="1" style="border-collapse:collapse;">';
+        xml+=`<tr><td colspan="2" style="font-weight:bold;font-size:13px;background:#f2f2f2;">周期观测报告 - 监测结果汇总</td></tr>`;
+        xml+=`<tr><td style="font-weight:bold;">筛选周期</td><td>${periodLabel}</td></tr>`;
+        xml+=`<tr><td style="font-weight:bold;">导出时间</td><td>${new Date().toLocaleString('zh-CN')}</td></tr>`;
+        xml+='<tr><td colspan="2"></td></tr>';
+        if(sampleWarns.length){
+            xml+='<tr><td colspan="2" style="font-weight:bold;color:#c0392b;background:#fdecea;">样本量不足</td></tr>';
+            sampleWarns.forEach(w=>xml+=`<tr><td colspan="2" style="color:#c0392b;">${w}</td></tr>`);
+            xml+='<tr><td colspan="2"></td></tr>';
+        }
+        if(mdeWarns.length){
+            xml+='<tr><td colspan="2" style="font-weight:bold;color:#d35400;background:#fef5e7;">精度超标（MDE）</td></tr>';
+            mdeWarns.forEach(w=>xml+=`<tr><td colspan="2" style="color:#d35400;">${w}</td></tr>`);
+        }
+        if(!sampleWarns.length&&!mdeWarns.length){
+            xml+='<tr><td colspan="2" style="color:#27ae60;">所有模块均达标</td></tr>';
+        }
+        xml+='</table></body></html>';
+
+        // Download
+        const blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');
+        a.href=url;a.download=`URS观测报告_${periodLabel.replace(/[\/\\:*?"<>|]/g,'_')}_${new Date().toISOString().slice(0,10)}.xls`;
+        document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+        showToast('已导出Excel');
+    });
+}
 function clearReport(){
     if(!confirm('确定清空所有观测报告？'))return;
     if(supabase){supabase.from('report_entries').delete().neq('id',0).then(()=>renderReport());}
