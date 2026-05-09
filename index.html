@@ -326,20 +326,33 @@ const MIN_SAMPLE = 200;
 const EXCEL_HEADERS = ['业务','模块','O(负责人)','观察周期','实际得分p_总计','实际得分p_L','实际得分p_D','实际得分p_B','实际得分p_O','实际得分p_M','实际样本量n_总计','实际样本量n_L','实际样本量n_D','实际样本量n_B','实际样本量n_O','实际样本量n_M','投流占比_L','投流占比_D','投流占比_B','投流占比_O','投流占比_M','加权权重w_L','加权权重w_D','加权权重w_B','加权权重w_O','加权权重w_M','总体波动精度δ','最小样本量n_min_整体','最小样本量n_min_L','最小样本量n_min_D','最小样本量n_min_B','最小样本量n_min_O','最小样本量n_min_M','可检测精度MDE_整体','可检测精度MDE_L','可检测精度MDE_D','可检测精度MDE_B','可检测精度MDE_O','可检测精度MDE_M','整体_可检测精度','整体_CI0.9','整体_CI0.95','整体_CI0.99','L页_可检测精度','L页_CI0.9','L页_CI0.95','L页_CI0.99','D页_可检测精度','D页_CI0.9','D页_CI0.95','D页_CI0.99','B页_可检测精度','B页_CI0.9','B页_CI0.95','B页_CI0.99','O页_可检测精度','O页_CI0.9','O页_CI0.95','O页_CI0.99','M页_可检测精度','M页_CI0.9','M页_CI0.95','M页_CI0.99'];
 const INPUT_COL_COUNT = 26; // Cols 1-26 are user-input
 const HEADER_GROUPS = [
-    {label:'基本信息',cols:4,color:'90,122,148'},
-    {label:'实际得分 p',cols:6,color:'0,180,216'},
-    {label:'实际样本量 n',cols:6,color:'6,214,160'},
-    {label:'投流占比',cols:5,color:'244,162,97'},
-    {label:'加权权重 w',cols:5,color:'123,104,238'},
-    {label:'正算: n_min',cols:7,color:'46,196,182'},
-    {label:'反算: MDE',cols:6,color:'239,71,111'},
-    {label:'CI置信区间',cols:24,color:'72,202,228'}
+    {label:'基本信息',cols:4,color:'90,122,148',rowspan:2},
+    {label:'实际得分 p',cols:6,color:'0,180,216',rowspan:2},
+    {label:'实际样本量 n',cols:6,color:'6,214,160',rowspan:2},
+    {label:'投流占比',cols:5,color:'244,162,97',rowspan:2},
+    {label:'加权权重 w',cols:5,color:'123,104,238',rowspan:2},
+    {label:'正算: n_min',cols:7,color:'46,196,182',rowspan:2},
+    {label:'反算: MDE',cols:6,color:'239,71,111',rowspan:2},
+    {label:'CI置信区间',cols:24,color:'72,202,228',rowspan:1}
 ];
-function buildGroupHeaderRow(extraCols){
-    let h='<tr class="col-group-header">';
-    HEADER_GROUPS.forEach(g=>h+=`<th colspan="${g.cols}" style="background:rgba(${g.color},0.25);color:#fff;font-weight:600;font-size:0.62rem;padding:4px 6px;border-bottom:2px solid rgba(${g.color},0.6);letter-spacing:0.5px;">${g.label}</th>`);
-    if(extraCols)h+=`<th style="background:var(--bg-tertiary);">${extraCols}</th>`;
-    return h+'</tr>';
+const CI_SUBGROUPS = [
+    {label:'整体',cols:4},{label:'L页',cols:4},{label:'D页',cols:4},
+    {label:'B页',cols:4},{label:'O页',cols:4},{label:'M页',cols:4}
+];
+function buildGroupHeaders(extraCol){
+    const ciColor='72,202,228';
+    let r1='<tr>';
+    HEADER_GROUPS.forEach(g=>{
+        r1+=`<th colspan="${g.cols}" rowspan="${g.rowspan}" style="background:rgba(${g.color},0.25);color:#fff;font-weight:600;font-size:0.62rem;padding:4px 6px;border-bottom:2px solid rgba(${g.color},0.6);letter-spacing:0.5px;text-align:center;">${g.label}</th>`;
+    });
+    if(extraCol)r1+=`<th rowspan="3" style="background:var(--bg-tertiary);font-size:0.62rem;color:var(--text-secondary);">${extraCol}</th>`;
+    r1+='</tr>';
+    let r2='<tr>';
+    CI_SUBGROUPS.forEach(s=>{
+        r2+=`<th colspan="${s.cols}" style="background:rgba(${ciColor},0.15);color:rgba(255,255,255,0.85);font-size:0.58rem;padding:3px 4px;border-bottom:1px solid rgba(${ciColor},0.4);text-align:center;">${s.label}</th>`;
+    });
+    r2+='</tr>';
+    return r1+r2;
 }
 const ALLOWED_USERS = ['shutong.yan','wanghao.zhang','xinrui.huang','tian.hao','shi.zhao','yunhong.jiang','shaoyang.xue','chuanyu.wu','xian.chen','xiaofan.yang','chaomachao.ma','yunfeimm.ma','yinghuiw.wang','allen.zhang','yanan.he','yxww.wang'];
 
@@ -595,7 +608,7 @@ function renderAllResults(){
 
     // Excel 63col with bg distinction
     const allRows=lastResults.map(r=>buildExcelRow(r));
-    h='<div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:4px;">63列 | <span style="background:var(--cell-input-bg);padding:1px 6px;border-radius:3px;">自填列</span> <span style="background:var(--cell-calc-bg);padding:1px 6px;border-radius:3px;">计算列</span></div><div style="overflow-x:auto;max-height:220px;"><table class="result-table" style="font-size:0.63rem;"><thead>'+buildGroupHeaderRow('')+'<tr>';
+    h='<div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:4px;">63列 | <span style="background:var(--cell-input-bg);padding:1px 6px;border-radius:3px;">自填列</span> <span style="background:var(--cell-calc-bg);padding:1px 6px;border-radius:3px;">计算列</span></div><div style="overflow-x:auto;max-height:240px;"><table class="result-table" style="font-size:0.63rem;"><thead>'+buildGroupHeaders('')+'<tr>';
     EXCEL_HEADERS.forEach((hd,i)=>h+=`<th style="white-space:nowrap;padding:3px 4px;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${hd}</th>`);
     h+='</tr></thead><tbody>';
     allRows.forEach(row=>{h+='<tr>';row.forEach((v,i)=>h+=`<td style="white-space:nowrap;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${v!=null?v:'-'}</td>`);h+='</tr>';});
@@ -733,7 +746,7 @@ async function renderReport(){
         }
     }
 
-    let h='<table class="result-table"><thead>'+buildGroupHeaderRow('录入人')+'<tr>';
+    let h='<table class="result-table"><thead>'+buildGroupHeaders('录入人')+'<tr>';
     EXCEL_HEADERS.forEach((hd,i)=>h+=`<th style="white-space:nowrap;padding:3px 4px;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${hd}</th>`);
     h+='<th>录入人</th></tr></thead><tbody>';
 
