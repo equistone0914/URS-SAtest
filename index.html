@@ -15,7 +15,7 @@
             --accent-purple: #7b68ee; --accent-dim: rgba(0,180,216,0.15);
             --shadow-sm: 0 2px 4px rgba(0,0,0,0.3); --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
             --shadow-glow: 0 0 15px rgba(0,180,216,0.15); --radius: 10px;
-            --cell-input-bg: rgba(36,52,71,0.8); --cell-calc-bg: rgba(0,180,216,0.04);
+            --cell-input-bg: rgba(36,52,71,0.85); --cell-calc-bg: rgba(0,180,216,0.12);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Noto Sans SC', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
@@ -325,6 +325,7 @@ const Z_CI = {0.90:1.6449, 0.95:1.9600, 0.99:2.5758};
 const MIN_SAMPLE = 200;
 const EXCEL_HEADERS = ['业务','模块','O(负责人)','观察周期','实际得分p_总计','实际得分p_L','实际得分p_D','实际得分p_B','实际得分p_O','实际得分p_M','实际样本量n_总计','实际样本量n_L','实际样本量n_D','实际样本量n_B','实际样本量n_O','实际样本量n_M','投流占比_L','投流占比_D','投流占比_B','投流占比_O','投流占比_M','加权权重w_L','加权权重w_D','加权权重w_B','加权权重w_O','加权权重w_M','总体波动精度δ','最小样本量n_min_整体','最小样本量n_min_L','最小样本量n_min_D','最小样本量n_min_B','最小样本量n_min_O','最小样本量n_min_M','可检测精度MDE_整体','可检测精度MDE_L','可检测精度MDE_D','可检测精度MDE_B','可检测精度MDE_O','可检测精度MDE_M','整体_可检测精度','整体_CI0.9','整体_CI0.95','整体_CI0.99','L页_可检测精度','L页_CI0.9','L页_CI0.95','L页_CI0.99','D页_可检测精度','D页_CI0.9','D页_CI0.95','D页_CI0.99','B页_可检测精度','B页_CI0.9','B页_CI0.95','B页_CI0.99','O页_可检测精度','O页_CI0.9','O页_CI0.95','O页_CI0.99','M页_可检测精度','M页_CI0.9','M页_CI0.95','M页_CI0.99'];
 const INPUT_COL_COUNT = 26; // Cols 1-26 are user-input
+const ALLOWED_USERS = ['shutong.yan','wanghao.zhang','xinrui.huang','tian.hao','shi.zhao','yunhong.jiang','shaoyang.xue','chuanyu.wu','xian.chen','xiaofan.yang','chaomachao.ma','yunfeimm.ma','yinghuiw.wang','allen.zhang','yanan.he','yxww.wang'];
 
 // ==================== Auth ====================
 let currentUser = '';
@@ -340,6 +341,7 @@ function doLogin(){
 function doSetName(){
     const n=document.getElementById('name-input').value.trim();
     if(!n){alert('请输入昵称');return;}
+    if(!ALLOWED_USERS.includes(n)){alert('抱歉，该用户没有访问权限，请向管理员 shutong.yan 进行申请');return;}
     currentUser=n;localStorage.setItem('urs-satest-username',n);enterApp();
 }
 function enterApp(){
