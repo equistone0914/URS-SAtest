@@ -331,20 +331,31 @@ const HEADER_GROUPS = [
     {label:'基本信息',cols:4,color:'90,122,148',rowspan:2},
     {label:'实际得分 p',cols:6,color:'0,180,216',rowspan:2},
     {label:'实际样本量 n',cols:6,color:'6,214,160',rowspan:2},
-    {label:'投流占比',cols:5,color:'244,162,97',rowspan:2},
-    {label:'加权权重 w',cols:5,color:'123,104,238',rowspan:2},
-    {label:'正算: n_min',cols:7,color:'46,196,182',rowspan:2},
-    {label:'反算: MDE',cols:6,color:'239,71,111',rowspan:2},
-    {label:'CI置信区间',cols:24,color:'72,202,228',rowspan:1}
+    {label:'DAU流量占比',cols:5,color:'244,162,97',rowspan:2},
+    {label:'DAU权重分布 w',cols:5,color:'123,104,238',rowspan:2},
+    {label:'精度→最小样本量',cols:7,color:'46,196,182',rowspan:2},
+    {label:'样本量→当前精度',cols:30,color:'239,71,111',rowspan:1}
 ];
-const CI_SUBGROUPS = [
-    {label:'整体',cols:4,bg:'0.22'},{label:'L页',cols:4,bg:'0.12'},
-    {label:'D页',cols:4,bg:'0.22'},{label:'B页',cols:4,bg:'0.12'},
-    {label:'O页',cols:4,bg:'0.22'},{label:'M页',cols:4,bg:'0.12'}
+const REVERSE_SUBGROUPS = [
+    {label:'MDE汇总',cols:6,bg:'0.18'},
+    {label:'整体',cols:4,bg:'0.25'},{label:'L页',cols:4,bg:'0.14'},
+    {label:'D页',cols:4,bg:'0.25'},{label:'B页',cols:4,bg:'0.14'},
+    {label:'O页',cols:4,bg:'0.25'},{label:'M页',cols:4,bg:'0.14'}
 ];
-const CI_SHORT_LABELS = ['MDE','CI90','CI95','CI99'];
+const DISPLAY_LABELS = [
+    '业务','模块','负责人','周期',
+    '总计','L','D','B','O','M',
+    '总计','L','D','B','O','M',
+    'L','D','B','O','M',
+    'L','D','B','O','M',
+    'δ','整体','L','D','B','O','M',
+    '整体','L','D','B','O','M',
+    'MDE','CI90','CI95','CI99','MDE','CI90','CI95','CI99',
+    'MDE','CI90','CI95','CI99','MDE','CI90','CI95','CI99',
+    'MDE','CI90','CI95','CI99','MDE','CI90','CI95','CI99'
+];
 function buildGroupHeaders(extraCol){
-    const ciColor='72,202,228';
+    const revColor='239,71,111';
     let r1='<tr>';
     HEADER_GROUPS.forEach(g=>{
         r1+=`<th colspan="${g.cols}" rowspan="${g.rowspan}" style="background:rgba(${g.color},0.25);color:#fff;font-weight:600;font-size:0.62rem;padding:4px 6px;border-bottom:2px solid rgba(${g.color},0.6);border-left:1px solid var(--border-color);letter-spacing:0.5px;text-align:center;">${g.label}</th>`;
@@ -352,15 +363,14 @@ function buildGroupHeaders(extraCol){
     if(extraCol)r1+=`<th rowspan="3" style="background:var(--bg-tertiary);font-size:0.62rem;color:var(--text-secondary);border-left:1px solid var(--border-color);">${extraCol}</th>`;
     r1+='</tr>';
     let r2='<tr>';
-    CI_SUBGROUPS.forEach(s=>{
-        r2+=`<th colspan="${s.cols}" style="background:rgba(${ciColor},${s.bg});color:rgba(255,255,255,0.9);font-size:0.58rem;padding:3px 4px;border-bottom:1px solid rgba(${ciColor},0.4);border-left:1px solid var(--border-color);text-align:center;">${s.label}</th>`;
+    REVERSE_SUBGROUPS.forEach(s=>{
+        r2+=`<th colspan="${s.cols}" style="background:rgba(${revColor},${s.bg});color:rgba(255,255,255,0.9);font-size:0.58rem;padding:3px 4px;border-bottom:1px solid rgba(${revColor},0.4);border-left:1px solid var(--border-color);text-align:center;">${s.label}</th>`;
     });
     r2+='</tr>';
     return r1+r2;
 }
 function getShortHeader(hd,i){
-    if(i>=39&&i<=62){return CI_SHORT_LABELS[(i-39)%4];}
-    return hd;
+    return DISPLAY_LABELS[i]||hd;
 }
 const ALLOWED_USERS = ['shutong.yan','wanghao.zhang','xinrui.huang','tian.hao','shi.zhao','yunhong.jiang','shaoyang.xue','chuanyu.wu','xian.chen','xiaofan.yang','chaomachao.ma','yunfeimm.ma','yinghuiw.wang','allen.zhang','yanan.he','yxww.wang'];
 
