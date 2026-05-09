@@ -301,7 +301,7 @@
             <div class="table-wrapper" id="report-table-wrapper"></div>
             <div class="btn-row">
                 <button class="btn btn-sm btn-success" onclick="copyReport()">复制当前</button>
-                <button class="btn btn-sm btn-secondary" onclick="exportReportAll()">导出全部</button>
+                <button class="btn btn-sm btn-secondary" onclick="exportReportAll()">下载报告</button>
                 <button class="btn btn-sm btn-secondary" style="margin-left:auto;color:var(--accent-red);" onclick="clearReport()">清空</button>
             </div>
         </div>
@@ -954,24 +954,33 @@ function copyReport(){
 function exportReportAll(){
     fetchReport().then(report=>{
         const fs=document.getElementById('report-start').value,fe=document.getElementById('report-end').value;
-        const activeKey=fs&&fe?getPeriodKey(fs,fe):'';
-        const filtered=activeKey?report.filter(r=>r.period_key===activeKey):report;
-        const periodLabel=activeKey?formatPeriodLabel(fs,fe):'全部周期';
+        const defaultMonths=getDefaultMonthKeys();
+        const dataPeriods=[...new Set(report.map(r=>r.period_key))].filter(k=>k);
+        const allPeriods=[...new Set([...defaultMonths,...dataPeriods])];
+        const byType={month:[],biweek:[],week:[],custom:[]};
+        allPeriods.forEach(k=>{const{start,end}=parsePeriodKey(k);byType[getPeriodType(start,end)].push(k);});
+        Object.values(byType).forEach(a=>a.sort().reverse());
+        let activeKey=fs&&fe?getPeriodKey(fs,fe):'';
+        if(!activeKey&&byType.month.length)activeKey=byType.month[0];
+        if(!activeKey){showToast('请先选择周期');return;}
 
-        // Build all module rows
+        const periodLabel=formatPeriodLabel(...activeKey.split('|'));
+        const filtered=report.filter(r=>r.period_key===activeKey);
         const dataMap={};
         filtered.forEach(r=>{dataMap[r.business+'||'+r.module]=r;});
+
         const allModuleRows=[];
         for(const biz of Object.keys(MODULE_LIST))for(const mod of MODULE_LIST[biz])allModuleRows.push({business:biz,module:mod});
 
-        // Collect data rows and warnings
-        const dataRows=[];
+        // Collect rows and warnings
+        const rows=[];
         let sampleWarns=[],mdeWarns=[];
         for(const mr of allModuleRows){
             const entry=dataMap[mr.business+'||'+mr.module];
             const r=entry||{business:mr.business,module:mr.module,period_label:periodLabel,user_name:''};
             const d=entry?entry.data||{}:{};
-            dataRows.push({row:buildReportRow(r,d),user:entry?r.user_name||'-':''});
+            const rowData=buildReportRow(r,d);
+            rows.push({data:rowData,user:entry?r.user_name||'-':''});
             if(entry){
                 if(d.nTotal&&d.minNTotal&&d.nTotal<d.minNTotal)sampleWarns.push(`${mr.business}/${mr.module}：整体 ${d.nTotal}/${d.minNTotal} (缺${d.minNTotal-d.nTotal})`);
                 const ap=PAGES.filter(pg=>d.pageData&&d.pageData[pg]&&d.pageData[pg].p>0&&d.pageData[pg].p<1&&d.pageData[pg].w>0);
@@ -981,47 +990,49 @@ function exportReportAll(){
             }
         }
 
-        // Build Excel HTML (two sheets via worksheets)
+        // Remove period column (index 3) from headers and rows since period is in the file header
+        const skipCol=3;
+        const headers=EXCEL_HEADERS.filter((_,i)=>i!==skipCol);
+        const displayLabels=DISPLAY_LABELS.filter((_,i)=>i!==skipCol);
+
+        // Build single-sheet Excel
         let xml='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
-        xml+='<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>';
-        xml+='<x:ExcelWorksheet><x:Name>观测数据</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>';
-        xml+='<x:ExcelWorksheet><x:Name>监测结果</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>';
-        xml+='</x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>';
-
-        // Sheet 1: Data
+        xml+='<head><meta charset="UTF-8"></head><body>';
         xml+='<table border="1" style="border-collapse:collapse;">';
-        xml+='<tr>'+EXCEL_HEADERS.map(h=>`<th style="background:#dce6f1;font-weight:bold;font-size:11px;white-space:nowrap;">${h}</th>`).join('')+'<th style="background:#dce6f1;font-weight:bold;">录入人</th></tr>';
-        dataRows.forEach(dr=>{xml+='<tr>'+dr.row.map(v=>`<td style="font-size:11px;">${v}</td>`).join('')+`<td>${dr.user}</td></tr>`;});
-        xml+='</table>';
 
-        // Sheet 2: Warnings
-        xml+='<br style="page-break-before:always">';
-        xml+='<table border="1" style="border-collapse:collapse;">';
-        xml+=`<tr><td colspan="2" style="font-weight:bold;font-size:13px;background:#f2f2f2;">周期观测报告 - 监测结果汇总</td></tr>`;
-        xml+=`<tr><td style="font-weight:bold;">筛选周期</td><td>${periodLabel}</td></tr>`;
-        xml+=`<tr><td style="font-weight:bold;">导出时间</td><td>${new Date().toLocaleString('zh-CN')}</td></tr>`;
-        xml+='<tr><td colspan="2"></td></tr>';
+        // Header area: period + warnings
+        const totalCols=headers.length+1;
+        xml+=`<tr><td colspan="${totalCols}" style="font-weight:bold;font-size:14px;">URS周期观测报告 - ${periodLabel}</td></tr>`;
+        xml+=`<tr><td colspan="${totalCols}" style="font-size:11px;color:#666;">导出时间：${new Date().toLocaleString('zh-CN')}</td></tr>`;
         if(sampleWarns.length){
-            xml+='<tr><td colspan="2" style="font-weight:bold;color:#c0392b;background:#fdecea;">样本量不足</td></tr>';
-            sampleWarns.forEach(w=>xml+=`<tr><td colspan="2" style="color:#c0392b;">${w}</td></tr>`);
-            xml+='<tr><td colspan="2"></td></tr>';
+            xml+=`<tr><td colspan="${totalCols}" style="font-weight:bold;color:#c0392b;background:#fdecea;">样本量不足（实际/最小）</td></tr>`;
+            sampleWarns.forEach(w=>xml+=`<tr><td colspan="${totalCols}" style="color:#c0392b;font-size:11px;">${w}</td></tr>`);
         }
         if(mdeWarns.length){
-            xml+='<tr><td colspan="2" style="font-weight:bold;color:#d35400;background:#fef5e7;">精度超标（MDE）</td></tr>';
-            mdeWarns.forEach(w=>xml+=`<tr><td colspan="2" style="color:#d35400;">${w}</td></tr>`);
+            xml+=`<tr><td colspan="${totalCols}" style="font-weight:bold;color:#d35400;background:#fef5e7;">精度超标（MDE）</td></tr>`;
+            mdeWarns.forEach(w=>xml+=`<tr><td colspan="${totalCols}" style="color:#d35400;font-size:11px;">${w}</td></tr>`);
         }
         if(!sampleWarns.length&&!mdeWarns.length){
-            xml+='<tr><td colspan="2" style="color:#27ae60;">所有模块均达标</td></tr>';
+            xml+=`<tr><td colspan="${totalCols}" style="color:#27ae60;">所有模块均达标</td></tr>`;
         }
+        xml+=`<tr><td colspan="${totalCols}"></td></tr>`;
+
+        // Column headers
+        xml+='<tr>'+displayLabels.map(h=>`<th style="background:#dce6f1;font-weight:bold;font-size:11px;white-space:nowrap;">${h}</th>`).join('')+'<th style="background:#dce6f1;font-weight:bold;">录入人</th></tr>';
+
+        // Data rows
+        rows.forEach(dr=>{
+            const rowFiltered=dr.data.filter((_,i)=>i!==skipCol);
+            xml+='<tr>'+rowFiltered.map(v=>`<td style="font-size:11px;">${v}</td>`).join('')+`<td>${dr.user}</td></tr>`;
+        });
         xml+='</table></body></html>';
 
-        // Download
-        const blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+        const blob=new Blob(['﻿'+xml],{type:'application/vnd.ms-excel;charset=utf-8'});
         const url=URL.createObjectURL(blob);
         const a=document.createElement('a');
-        a.href=url;a.download=`URS观测报告_${periodLabel.replace(/[\/\\:*?"<>|]/g,'_')}_${new Date().toISOString().slice(0,10)}.xls`;
+        a.href=url;a.download=`URS观测报告_${periodLabel.replace(/[\/\\:*?"<>|]/g,'_')}.xls`;
         document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-        showToast('已导出Excel');
+        showToast('已下载');
     });
 }
 function clearReport(){
