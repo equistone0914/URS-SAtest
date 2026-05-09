@@ -76,7 +76,7 @@
         .sidebar-bottom .user-badge:hover { color: var(--text-primary); }
         .sidebar-bottom .theme-toggle { padding: 3px 8px; font-size: 0.62rem; }
         .main-content { flex: 1; overflow-y: auto; height: 100vh; }
-        .container { max-width: 1700px; margin: 0 auto; padding: 16px 22px; }
+        .container { max-width: 1700px; margin: 0 auto; padding: 16px 22px; display: flex; flex-direction: column; min-height: 100%; }
         .user-menu { position: relative; }
         .user-badge { font-size: 0.72rem; color: var(--accent-cyan); cursor: pointer; }
         .user-badge:hover { color: var(--text-primary); }
@@ -141,7 +141,8 @@
         .result-block-header { padding: 8px 16px; background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
         .result-block-title { font-size: 0.78rem; font-weight: 600; color: var(--accent-cyan); }
         .result-block-body { padding: 12px 16px; overflow-x: auto; }
-        .result-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+        .result-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; table-layout: fixed; }
+        .result-table th, .result-table td { overflow: hidden; text-overflow: ellipsis; min-width: 52px; width: 52px; }
         .result-table th { text-align: center; padding: 5px 4px; background: var(--bg-tertiary); color: var(--text-secondary); font-weight: 600; font-size: 0.65rem; border-bottom: 2px solid var(--border-color); border-left: 1px solid var(--border-color); white-space: nowrap; }
         .result-table th:first-child { border-left: none; }
         .result-table td { text-align: center; padding: 5px 4px; border-bottom: 1px solid var(--border-color); border-left: 1px solid var(--border-color); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-primary); }
@@ -188,7 +189,7 @@
 
         .copy-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent-blue); color: #fff; padding: 8px 20px; border-radius: 6px; font-size: 0.78rem; box-shadow: var(--shadow-md); z-index: 1000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .copy-toast.show { opacity: 1; }
-        .watermark { text-align: center; padding: 16px; color: var(--text-muted); font-size: 0.66rem; border-top: 1px solid var(--border-color); margin-top: 28px; }
+        .watermark { text-align: center; padding: 16px; color: var(--text-muted); font-size: 0.66rem; border-top: 1px solid var(--border-color); margin-top: auto; }
         .history-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 6px; background: var(--bg-tertiary); }
         .history-item .info { font-size: 0.74rem; color: var(--text-primary); }
         .history-item .time { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; }
@@ -254,9 +255,10 @@
             <div class="period-section">
                 <label>观察周期<span class="period-required"> *必填</span></label>
                 <div class="period-inputs">
-                    <input type="date" id="inp-period-start" min="2026-01-01">
+                    <input type="date" id="inp-period-start" min="2026-01-01" onchange="syncPeriodTags()">
                     <span>至</span>
-                    <input type="date" id="inp-period-end" min="2026-01-01">
+                    <input type="date" id="inp-period-end" min="2026-01-01" onchange="syncPeriodTags()">
+                    <button class="btn btn-sm btn-primary" id="period-confirm-btn" style="display:none;" onclick="confirmCustomPeriod()">确定</button>
                 </div>
                 <div class="period-quick-tags" id="calc-period-tags"></div>
             </div>
@@ -309,6 +311,7 @@
             </div>
             <div id="report-chips-area"></div>
             <div class="table-wrapper" id="report-table-wrapper"></div>
+            <div id="report-warnings"></div>
             <div class="btn-row">
                 <button class="btn btn-sm btn-success" onclick="copyReport()">复制当前</button>
                 <button class="btn btn-sm btn-secondary" onclick="exportReportAll()">下载报告</button>
@@ -370,6 +373,13 @@ const MODULE_LIST = {
 const PAGES = ['L','D','B','O','M'];
 const Z_CI = {0.90:1.6449, 0.95:1.9600, 0.99:2.5758};
 const MIN_SAMPLE = 200;
+const OWNER_MAP = {'书仝':'shutong.yan','传宇':'chuanyu.wu','张王浩':'wanghao.zhang','心蕊':'xinrui.huang','晓帆':'xiaofan.yang','马超':'chaomachao.ma'};
+const MODULE_OWNER = {};
+(function(){
+    const list = {'国内酒店':[['URS','书仝'],['比价UPS_整体','心蕊'],['比价UPS_QC','心蕊'],['比价UPS_QM_低星','心蕊'],['比价UPS_QE','心蕊'],['比价UPS_QF','心蕊'],['搜索UPS','晓帆'],['筛选UPS','晓帆'],['变价UPS','晓帆'],['入住体验UPS','晓帆'],['人工客服UPS','晓帆'],['机器客服UPS','晓帆'],['取消UPS','晓帆']],
+    '国际酒店':[['URS','传宇'],['比价UPS_整体','马超'],['比价UPS_QC','马超'],['比价UPS_QM_港澳日','马超'],['比价UPS_QA_日泰韩','马超'],['搜索UPS','张王浩'],['筛选UPS','张王浩'],['变价UPS','张王浩'],['入住体验UPS','张王浩'],['人工客服UPS','张王浩'],['机器客服UPS','张王浩'],['取消UPS','张王浩']]};
+    for(const biz in list) list[biz].forEach(([mod,cn])=>{MODULE_OWNER[biz+'|'+mod]=OWNER_MAP[cn]||cn;});
+})();
 const EXCEL_HEADERS = ['业务','模块','O(负责人)','观察周期','实际得分p_总计','实际得分p_L','实际得分p_D','实际得分p_B','实际得分p_O','实际得分p_M','实际样本量n_总计','实际样本量n_L','实际样本量n_D','实际样本量n_B','实际样本量n_O','实际样本量n_M','投流占比_L','投流占比_D','投流占比_B','投流占比_O','投流占比_M','加权权重w_L','加权权重w_D','加权权重w_B','加权权重w_O','加权权重w_M','总体波动精度δ','最小样本量n_min_整体','最小样本量n_min_L','最小样本量n_min_D','最小样本量n_min_B','最小样本量n_min_O','最小样本量n_min_M','可检测精度MDE_整体','可检测精度MDE_L','可检测精度MDE_D','可检测精度MDE_B','可检测精度MDE_O','可检测精度MDE_M','整体_可检测精度','整体_CI0.9','整体_CI0.95','整体_CI0.99','L页_可检测精度','L页_CI0.9','L页_CI0.95','L页_CI0.99','D页_可检测精度','D页_CI0.9','D页_CI0.95','D页_CI0.99','B页_可检测精度','B页_CI0.9','B页_CI0.95','B页_CI0.99','O页_可检测精度','O页_CI0.9','O页_CI0.95','O页_CI0.99','M页_可检测精度','M页_CI0.9','M页_CI0.95','M页_CI0.99'];
 const INPUT_COL_COUNT = 26; // Cols 1-26 are user-input
 const HEADER_GROUPS = [
@@ -399,13 +409,13 @@ const DISPLAY_LABELS = [
     'MDE','CI90','CI95','CI99','MDE','CI90','CI95','CI99',
     'MDE','CI90','CI95','CI99','MDE','CI90','CI95','CI99'
 ];
-function buildGroupHeaders(extraCol){
+function buildGroupHeaders(extraCols){
     const revColor='239,71,111';
     let r1='<tr>';
     HEADER_GROUPS.forEach(g=>{
         r1+=`<th colspan="${g.cols}" rowspan="${g.rowspan}" style="background:rgba(${g.color},0.25);color:#fff;font-weight:600;font-size:0.62rem;padding:4px 6px;border-bottom:2px solid rgba(${g.color},0.6);border-left:1px solid var(--border-color);letter-spacing:0.5px;text-align:center;">${g.label}</th>`;
     });
-    if(extraCol)r1+=`<th rowspan="3" style="background:var(--bg-tertiary);font-size:0.62rem;color:var(--text-secondary);border-left:1px solid var(--border-color);">${extraCol}</th>`;
+    if(extraCols)(Array.isArray(extraCols)?extraCols:[extraCols]).forEach(c=>r1+=`<th rowspan="3" style="background:var(--bg-tertiary);font-size:0.62rem;color:var(--text-secondary);border-left:1px solid var(--border-color);">${c}</th>`);
     r1+='</tr>';
     let r2='<tr>';
     REVERSE_SUBGROUPS.forEach(s=>{
@@ -535,7 +545,19 @@ function getPeriodType(s,e){
     const diff=Math.round((de-ds)/86400000)+1;
     if(diff===7)return'week';if(diff>=13&&diff<=15)return'biweek';return'custom';
 }
-function setCalcPeriod(s,e){document.getElementById('inp-period-start').value=s;document.getElementById('inp-period-end').value=e;renderCalcPeriodTags();}
+function setCalcPeriod(s,e){document.getElementById('inp-period-start').value=s;document.getElementById('inp-period-end').value=e;syncPeriodTags();}
+function syncPeriodTags(){
+    const s=document.getElementById('inp-period-start').value,e=document.getElementById('inp-period-end').value;
+    const curKey=s&&e?getPeriodKey(s,e):'';
+    document.querySelectorAll('#calc-period-tags .period-quick-tag').forEach(t=>{
+        const onclick=t.getAttribute('onclick')||'';
+        const m=onclick.match(/setCalcPeriod\('([^']+)','([^']+)'\)/);
+        if(m)t.classList.toggle('active',getPeriodKey(m[1],m[2])===curKey);
+    });
+    const matched=!!document.querySelector('#calc-period-tags .period-quick-tag.active');
+    document.getElementById('period-confirm-btn').style.display=s&&e&&!matched?'inline-flex':'none';
+}
+function confirmCustomPeriod(){showToast('已选定自定义周期');document.getElementById('period-confirm-btn').style.display='none';}
 
 // ==================== Selectors (memory) ====================
 let selectorGroups=[],groupIdCounter=0;
@@ -868,7 +890,7 @@ async function renderReport(){
         }
     }
 
-    let h='<table class="result-table"><thead>'+buildGroupHeaders('录入人')+'<tr>';
+    let h='<table class="result-table"><thead>'+buildGroupHeaders(['录入人','录入时间'])+'<tr>';
     EXCEL_HEADERS.forEach((hd,i)=>h+=`<th style="white-space:nowrap;padding:3px 4px;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${getShortHeader(hd,i)}</th>`);
     h+='</tr></thead><tbody>';
 
@@ -898,7 +920,8 @@ async function renderReport(){
             }
             h+=`<td class="${cls}" style="white-space:nowrap;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${v}</td>`;
         });
-        h+=`<td style="white-space:nowrap;color:var(--text-muted);">${entry?r.user_name||'-':''}</td></tr>`;
+        h+=`<td style="white-space:nowrap;color:var(--text-muted);">${entry?r.user_name||'-':''}</td>`;
+        h+=`<td style="white-space:nowrap;color:var(--text-muted);font-size:0.65rem;">${entry&&r.updated_at?new Date(r.updated_at).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</td></tr>`;
 
         // Collect warnings per module
         if(hasData){
@@ -928,12 +951,14 @@ async function renderReport(){
             ${mdeIssues.map(s=>`<tr><td style="padding:2px 8px 2px 0;white-space:nowrap;color:var(--text-secondary);font-weight:500;">${s.module}</td><td style="padding:2px 0;color:var(--accent-orange);">${s.details.join('；')}</td></tr>`).join('')}
             </table></div>`;
     }
-    document.getElementById('report-table-wrapper').innerHTML=h+warnHtml;
+    document.getElementById('report-table-wrapper').innerHTML=h;
+    document.getElementById('report-warnings').innerHTML=warnHtml;
 }
 
 function buildReportRow(r,d){
     const row=[];
-    row.push(r.business||'-',r.module||'-','-',r.period_label||'-');
+    const owner=MODULE_OWNER[(r.business||'')+'|'+(r.module||'')]||'-';
+    row.push(r.business||'-',r.module||'-',owner,r.period_label||'-');
     row.push(d.pTotal!=null?fpct(d.pTotal):'-');
     PAGES.forEach(pg=>row.push(d.pageData&&d.pageData[pg]&&d.pageData[pg].p!=null?fpct(d.pageData[pg].p):'-'));
     row.push(d.nTotal!=null?d.nTotal:'-');
@@ -991,7 +1016,8 @@ function exportReportAll(){
             const r=entry||{business:mr.business,module:mr.module,period_label:periodLabel,user_name:''};
             const d=entry?entry.data||{}:{};
             const rowData=buildReportRow(r,d);
-            rows.push({data:rowData,user:entry?r.user_name||'-':''});
+            const timeStr=entry&&r.updated_at?new Date(r.updated_at).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+            rows.push({data:rowData,user:entry?r.user_name||'-':'',time:timeStr});
             if(entry){
                 if(d.nTotal&&d.minNTotal&&d.nTotal<d.minNTotal)sampleWarns.push(`${mr.business}/${mr.module}：整体 ${d.nTotal}/${d.minNTotal} (缺${d.minNTotal-d.nTotal})`);
                 const ap=PAGES.filter(pg=>d.pageData&&d.pageData[pg]&&d.pageData[pg].p>0&&d.pageData[pg].p<1&&d.pageData[pg].w>0);
@@ -1012,7 +1038,7 @@ function exportReportAll(){
         xml+='<table border="1" style="border-collapse:collapse;">';
 
         // Header area: period + warnings
-        const totalCols=headers.length+1;
+        const totalCols=headers.length+2;
         xml+=`<tr><td colspan="${totalCols}" style="font-weight:bold;font-size:14px;">URS周期观测报告 - ${periodLabel}</td></tr>`;
         xml+=`<tr><td colspan="${totalCols}" style="font-size:11px;color:#666;">导出时间：${new Date().toLocaleString('zh-CN')}</td></tr>`;
         if(sampleWarns.length){
@@ -1029,12 +1055,12 @@ function exportReportAll(){
         xml+=`<tr><td colspan="${totalCols}"></td></tr>`;
 
         // Column headers
-        xml+='<tr>'+displayLabels.map(h=>`<th style="background:#dce6f1;font-weight:bold;font-size:11px;white-space:nowrap;">${h}</th>`).join('')+'<th style="background:#dce6f1;font-weight:bold;">录入人</th></tr>';
+        xml+='<tr>'+displayLabels.map(h=>`<th style="background:#dce6f1;font-weight:bold;font-size:11px;white-space:nowrap;">${h}</th>`).join('')+'<th style="background:#dce6f1;font-weight:bold;">录入人</th><th style="background:#dce6f1;font-weight:bold;">录入时间</th></tr>';
 
         // Data rows
         rows.forEach(dr=>{
             const rowFiltered=dr.data.filter((_,i)=>i!==skipCol);
-            xml+='<tr>'+rowFiltered.map(v=>`<td style="font-size:11px;">${v}</td>`).join('')+`<td>${dr.user}</td></tr>`;
+            xml+='<tr>'+rowFiltered.map(v=>`<td style="font-size:11px;">${v}</td>`).join('')+`<td>${dr.user}</td><td>${dr.time}</td></tr>`;
         });
         xml+='</table></body></html>';
 
