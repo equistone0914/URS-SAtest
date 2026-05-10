@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URS-SAtest | 最小样本量计算器</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M18 52h4l1-10h2l1 10h4v-2l-1-9c4-1 7-4 8-8h2c2 0 3-1 4-3l4-8c0-1 0-2-1-2h-2l-2 4v-4c0-5-3-9-7-11l1-3c0-1 0-2-1-2-1-1-2 0-2 1l-2 3c-2-1-3-1-5-1-3 0-5 1-7 3l-2-1c-1-1-2 0-3 1 0 1 0 2 1 2l2 1c-2 2-3 5-3 8v10l-1 9v2h4l1-10h2l1 10zm13-34a2 2 0 110 4 2 2 0 010-4z' fill='%230096c7'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M14 28c1-3 3-6 6-7l1-4c1-3 4-5 7-5 1 0 3 0 4 1l3-2c2-1 4-1 5 0 2 1 3 3 3 5l5-3c2-1 4 0 5 2 1 1 1 3 0 4l-3 6c2 2 3 5 3 8v6c0 2-1 4-2 6l1 11h-5l-1-10h-1l-2 10h-5l1-10c-1 1-3 2-5 2l-2 8h-5l-1-7h-1l-1 7h-5l1-8c-1-1-1-2-1-3v-8c0-2 1-4 3-5zm12-2a2 2 0 110 4 2 2 0 010-4z' fill='%230096c7'/%3E%3C/svg%3E">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -212,7 +212,7 @@
 <!-- Auth: Password Gate -->
 <div class="auth-overlay" id="auth-gate">
     <div class="login-box" id="pwd-box">
-        <div class="login-icon"><svg width="36" height="36" viewBox="0 0 64 64"><path d="M18 52h4l1-10h2l1 10h4v-2l-1-9c4-1 7-4 8-8h2c2 0 3-1 4-3l4-8c0-1 0-2-1-2h-2l-2 4v-4c0-5-3-9-7-11l1-3c0-1 0-2-1-2-1-1-2 0-2 1l-2 3c-2-1-3-1-5-1-3 0-5 1-7 3l-2-1c-1-1-2 0-3 1 0 1 0 2 1 2l2 1c-2 2-3 5-3 8v10l-1 9v2h4l1-10h2l1 10zm13-34a2 2 0 110 4 2 2 0 010-4z" fill="#48cae4"/></svg></div>
+        <div class="login-icon"><svg width="36" height="36" viewBox="0 0 64 64"><path d="M14 28c1-3 3-6 6-7l1-4c1-3 4-5 7-5 1 0 3 0 4 1l3-2c2-1 4-1 5 0 2 1 3 3 3 5l5-3c2-1 4 0 5 2 1 1 1 3 0 4l-3 6c2 2 3 5 3 8v6c0 2-1 4-2 6l1 11h-5l-1-10h-1l-2 10h-5l1-10c-1 1-3 2-5 2l-2 8h-5l-1-7h-1l-1 7h-5l1-8c-1-1-1-2-1-3v-8c0-2 1-4 3-5zm12-2a2 2 0 110 4 2 2 0 010-4z" fill="#48cae4"/></svg></div>
         <h2>URS-SAtest</h2>
         <p>最小样本量计算器 · 内部工具</p>
         <input type="password" class="login-input" id="pwd-input" placeholder="请输入访问密码" onkeydown="if(event.key==='Enter')doLogin()">
@@ -220,7 +220,7 @@
         <div class="login-error" id="login-error">密码错误</div>
     </div>
     <div class="login-box" id="name-box" style="display:none;">
-        <div class="login-icon"><svg width="36" height="36" viewBox="0 0 64 64"><path d="M18 52h4l1-10h2l1 10h4v-2l-1-9c4-1 7-4 8-8h2c2 0 3-1 4-3l4-8c0-1 0-2-1-2h-2l-2 4v-4c0-5-3-9-7-11l1-3c0-1 0-2-1-2-1-1-2 0-2 1l-2 3c-2-1-3-1-5-1-3 0-5 1-7 3l-2-1c-1-1-2 0-3 1 0 1 0 2 1 2l2 1c-2 2-3 5-3 8v10l-1 9v2h4l1-10h2l1 10zm13-34a2 2 0 110 4 2 2 0 010-4z" fill="#48cae4"/></svg></div>
+        <div class="login-icon"><svg width="36" height="36" viewBox="0 0 64 64"><path d="M14 28c1-3 3-6 6-7l1-4c1-3 4-5 7-5 1 0 3 0 4 1l3-2c2-1 4-1 5 0 2 1 3 3 3 5l5-3c2-1 4 0 5 2 1 1 1 3 0 4l-3 6c2 2 3 5 3 8v6c0 2-1 4-2 6l1 11h-5l-1-10h-1l-2 10h-5l1-10c-1 1-3 2-5 2l-2 8h-5l-1-7h-1l-1 7h-5l1-8c-1-1-1-2-1-3v-8c0-2 1-4 3-5zm12-2a2 2 0 110 4 2 2 0 010-4z" fill="#48cae4"/></svg></div>
         <h2>欢迎</h2>
         <p>请输入您的昵称或工号（用于标识录入人）</p>
         <input type="text" class="login-input" id="name-input" placeholder="昵称/工号" onkeydown="if(event.key==='Enter')doSetName()">
@@ -232,7 +232,7 @@
 <aside class="sidebar">
     <div class="sidebar-logo">
         <div style="display:flex;align-items:center;gap:8px;">
-            <svg width="28" height="28" viewBox="0 0 64 64" style="flex-shrink:0;"><path d="M18 52h4l1-10h2l1 10h4v-2l-1-9c4-1 7-4 8-8h2c2 0 3-1 4-3l4-8c0-1 0-2-1-2h-2l-2 4v-4c0-5-3-9-7-11l1-3c0-1 0-2-1-2-1-1-2 0-2 1l-2 3c-2-1-3-1-5-1-3 0-5 1-7 3l-2-1c-1-1-2 0-3 1 0 1 0 2 1 2l2 1c-2 2-3 5-3 8v10l-1 9v2h4l1-10h2l1 10zm13-34a2 2 0 110 4 2 2 0 010-4z" fill="#0096c7"/></svg>
+            <svg width="28" height="28" viewBox="0 0 64 64" style="flex-shrink:0;"><path d="M14 28c1-3 3-6 6-7l1-4c1-3 4-5 7-5 1 0 3 0 4 1l3-2c2-1 4-1 5 0 2 1 3 3 3 5l5-3c2-1 4 0 5 2 1 1 1 3 0 4l-3 6c2 2 3 5 3 8v6c0 2-1 4-2 6l1 11h-5l-1-10h-1l-2 10h-5l1-10c-1 1-3 2-5 2l-2 8h-5l-1-7h-1l-1 7h-5l1-8c-1-1-1-2-1-3v-8c0-2 1-4 3-5zm12-2a2 2 0 110 4 2 2 0 010-4z" fill="#0096c7"/></svg>
             <h1>URS-SAtest</h1>
         </div>
         <div class="subtitle">问卷样本量计算器<br>Qunar-URS数据运营工具</div>
