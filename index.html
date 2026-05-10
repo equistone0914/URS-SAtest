@@ -382,20 +382,37 @@ const MODULE_OWNER = {};
 const EXCEL_HEADERS = ['业务','模块','O(负责人)','观察周期','实际得分p_总计','实际得分p_L','实际得分p_D','实际得分p_B','实际得分p_O','实际得分p_M','实际样本量n_总计','实际样本量n_L','实际样本量n_D','实际样本量n_B','实际样本量n_O','实际样本量n_M','投流占比_L','投流占比_D','投流占比_B','投流占比_O','投流占比_M','加权权重w_L','加权权重w_D','加权权重w_B','加权权重w_O','加权权重w_M','总体波动精度δ','最小样本量n_min_整体','最小样本量n_min_L','最小样本量n_min_D','最小样本量n_min_B','最小样本量n_min_O','最小样本量n_min_M','可检测精度MDE_整体','可检测精度MDE_L','可检测精度MDE_D','可检测精度MDE_B','可检测精度MDE_O','可检测精度MDE_M','整体_可检测精度','整体_CI0.9','整体_CI0.95','整体_CI0.99','L页_可检测精度','L页_CI0.9','L页_CI0.95','L页_CI0.99','D页_可检测精度','D页_CI0.9','D页_CI0.95','D页_CI0.99','B页_可检测精度','B页_CI0.9','B页_CI0.95','B页_CI0.99','O页_可检测精度','O页_CI0.9','O页_CI0.95','O页_CI0.99','M页_可检测精度','M页_CI0.9','M页_CI0.95','M页_CI0.99'];
 const INPUT_COL_COUNT = 26; // Cols 1-26 are user-input
 const HEADER_GROUPS = [
-    {label:'基本信息',cols:4,color:'90,122,148',rowspan:2},
-    {label:'实际得分 p',cols:6,color:'0,180,216',rowspan:2},
-    {label:'实际样本量 n',cols:6,color:'6,214,160',rowspan:2},
-    {label:'投流占比',cols:5,color:'244,162,97',rowspan:2},
-    {label:'DAU权重分布 w',cols:5,color:'123,104,238',rowspan:2},
-    {label:'精度→最小样本量',cols:7,color:'46,196,182',rowspan:2},
-    {label:'样本量→当前精度',cols:30,color:'239,71,111',rowspan:1}
+    {label:'基本信息',cols:4,color:'55,90,110',rowspan:2},
+    {label:'实际得分 p',cols:6,color:'0,150,136',rowspan:2},
+    {label:'实际样本量 n',cols:6,color:'38,120,160',rowspan:2},
+    {label:'投流占比',cols:5,color:'0,150,136',rowspan:2},
+    {label:'DAU权重分布 w',cols:5,color:'38,120,160',rowspan:2},
+    {label:'精度→最小样本量',cols:7,color:'38,120,160',rowspan:2},
+    {label:'样本量→当前精度',cols:30,color:'0,105,92',rowspan:1}
 ];
 const REVERSE_SUBGROUPS = [
-    {label:'MDE汇总',cols:6,bg:'0.18'},
-    {label:'整体',cols:4,bg:'0.25'},{label:'L页',cols:4,bg:'0.14'},
-    {label:'D页',cols:4,bg:'0.25'},{label:'B页',cols:4,bg:'0.14'},
-    {label:'O页',cols:4,bg:'0.25'},{label:'M页',cols:4,bg:'0.14'}
+    {label:'MDE汇总',cols:6,bg:'0,150,136'},
+    {label:'整体',cols:4,bg:'38,120,160'},{label:'L页',cols:4,bg:'0,150,136'},
+    {label:'D页',cols:4,bg:'38,120,160'},{label:'B页',cols:4,bg:'0,150,136'},
+    {label:'O页',cols:4,bg:'38,120,160'},{label:'M页',cols:4,bg:'0,150,136'}
 ];
+const COL_BG = [];
+(function(){
+    const c1='rgba(55,90,110,0.10)',c2='rgba(0,150,136,0.07)',c3='rgba(38,120,160,0.07)';
+    for(let i=0;i<4;i++)COL_BG.push(c1); // 基本信息
+    for(let i=0;i<6;i++)COL_BG.push(c2); // 实际得分p
+    for(let i=0;i<6;i++)COL_BG.push(c3); // 实际样本量n
+    for(let i=0;i<5;i++)COL_BG.push(c2); // 投流占比
+    for(let i=0;i<5;i++)COL_BG.push(c3); // DAU权重分布w
+    for(let i=0;i<7;i++)COL_BG.push(c3); // 精度→最小样本量
+    for(let i=0;i<6;i++)COL_BG.push(c2); // MDE汇总
+    for(let i=0;i<4;i++)COL_BG.push(c3); // 整体
+    for(let i=0;i<4;i++)COL_BG.push(c2); // L页
+    for(let i=0;i<4;i++)COL_BG.push(c3); // D页
+    for(let i=0;i<4;i++)COL_BG.push(c2); // B页
+    for(let i=0;i<4;i++)COL_BG.push(c3); // O页
+    for(let i=0;i<4;i++)COL_BG.push(c2); // M页
+})();
 const DISPLAY_LABELS = [
     '业务','模块','负责人','周期',
     '总计','L','D','B','O','M',
@@ -408,17 +425,19 @@ const DISPLAY_LABELS = [
     'MDE','CI90','CI95','CI99','MDE','CI90','CI95','CI99',
     'MDE','CI90','CI95','CI99','MDE','CI90','CI95','CI99'
 ];
-function buildGroupHeaders(extraCols){
-    const revColor='239,71,111';
+function buildGroupHeaders(extraCols,skipCol){
     let r1='<tr>';
     HEADER_GROUPS.forEach(g=>{
-        r1+=`<th colspan="${g.cols}" rowspan="${g.rowspan}" style="background:rgba(${g.color},0.25);color:#fff;font-weight:600;font-size:0.62rem;padding:4px 6px;border-bottom:2px solid rgba(${g.color},0.6);border-left:1px solid var(--border-color);letter-spacing:0.5px;text-align:center;">${g.label}</th>`;
+        let cols=g.cols;
+        if(skipCol!==undefined&&g===HEADER_GROUPS[0])cols--;
+        if(cols<=0)return;
+        r1+=`<th colspan="${cols}" rowspan="${g.rowspan}" style="background:rgba(${g.color},0.35);color:var(--text-primary);font-weight:600;font-size:0.62rem;padding:4px 6px;border-bottom:2px solid rgba(${g.color},0.7);border-left:1px solid var(--border-color);letter-spacing:0.5px;text-align:center;">${g.label}</th>`;
     });
     if(extraCols)(Array.isArray(extraCols)?extraCols:[extraCols]).forEach(c=>r1+=`<th rowspan="3" style="background:var(--bg-tertiary);font-size:0.62rem;color:var(--text-secondary);border-left:1px solid var(--border-color);">${c}</th>`);
     r1+='</tr>';
     let r2='<tr>';
     REVERSE_SUBGROUPS.forEach(s=>{
-        r2+=`<th colspan="${s.cols}" style="background:rgba(${revColor},${s.bg});color:rgba(255,255,255,0.9);font-size:0.58rem;padding:3px 4px;border-bottom:1px solid rgba(${revColor},0.4);border-left:1px solid var(--border-color);text-align:center;">${s.label}</th>`;
+        r2+=`<th colspan="${s.cols}" style="background:rgba(${s.bg},0.22);color:var(--text-primary);font-size:0.58rem;padding:3px 4px;border-bottom:1px solid rgba(${s.bg},0.5);border-left:1px solid var(--border-color);text-align:center;">${s.label}</th>`;
     });
     r2+='</tr>';
     return r1+r2;
@@ -749,10 +768,10 @@ function renderAllResults(){
 
     // Excel 63col with bg distinction
     const allRows=lastResults.map(r=>buildExcelRow(r));
-    h='<div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:4px;">63列 | <span style="background:var(--cell-input-bg);padding:1px 6px;border-radius:3px;">自填列</span> <span style="background:var(--cell-calc-bg);padding:1px 6px;border-radius:3px;">计算列</span></div><div style="overflow-x:auto;max-height:240px;"><table class="result-table" style="font-size:0.63rem;"><thead>'+buildGroupHeaders('')+'<tr>';
-    EXCEL_HEADERS.forEach((hd,i)=>h+=`<th style="white-space:nowrap;padding:3px 4px;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${getShortHeader(hd,i)}</th>`);
+    h='<div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:4px;">63列</div><div style="overflow-x:auto;max-height:240px;"><table class="result-table" style="font-size:0.63rem;"><thead>'+buildGroupHeaders('')+'<tr>';
+    EXCEL_HEADERS.forEach((hd,i)=>h+=`<th style="white-space:nowrap;padding:3px 6px;background:${COL_BG[i]||'var(--bg-tertiary)'};color:var(--text-primary);">${getShortHeader(hd,i)}</th>`);
     h+='</tr></thead><tbody>';
-    allRows.forEach(row=>{h+='<tr>';row.forEach((v,i)=>h+=`<td style="white-space:nowrap;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${v!=null?v:'-'}</td>`);h+='</tr>';});
+    allRows.forEach(row=>{h+='<tr>';row.forEach((v,i)=>h+=`<td style="white-space:nowrap;background:${COL_BG[i]||'transparent'}">${v!=null?v:'-'}</td>`);h+='</tr>';});
     h+='</tbody></table></div>';document.getElementById('result-excel').innerHTML=h;
 
     // Suggestions - split into 样本量 and 精度 dimensions
@@ -889,8 +908,8 @@ async function renderReport(){
         }
     }
 
-    let h='<table class="result-table"><thead>'+buildGroupHeaders(['录入人','录入时间'])+'<tr>';
-    EXCEL_HEADERS.forEach((hd,i)=>h+=`<th style="white-space:nowrap;padding:3px 4px;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${getShortHeader(hd,i)}</th>`);
+    let h='<table class="result-table"><thead>'+buildGroupHeaders(['录入人','录入时间'],3)+'<tr>';
+    EXCEL_HEADERS.forEach((hd,i)=>{if(i===3)return;h+=`<th style="white-space:nowrap;padding:3px 6px;background:${COL_BG[i]||'var(--bg-tertiary)'};color:var(--text-primary);">${getShortHeader(hd,i)}</th>`;});
     h+='</tr></thead><tbody>';
 
     let sampleIssues=[],mdeIssues=[];
@@ -902,6 +921,7 @@ async function renderReport(){
         const hasData=!!entry;
         h+='<tr>';
         row.forEach((v,i)=>{
+            if(i===3)return;
             let cls='';
             if(hasData){
                 if(i>=27&&i<=32){
@@ -917,7 +937,7 @@ async function renderReport(){
                 if(i===39){if(v!=='-'&&parseFloat(v)>0.01)cls='cell-red';}
                 if([43,47,51,55,59].includes(i)){if(v!=='-'&&parseFloat(v)>0.02)cls='cell-red';}
             }
-            h+=`<td class="${cls}" style="white-space:nowrap;background:${i<INPUT_COL_COUNT?'var(--cell-input-bg)':'var(--cell-calc-bg)'}">${v}</td>`;
+            h+=`<td class="${cls}" style="white-space:nowrap;background:${COL_BG[i]||'transparent'}">${v}</td>`;
         });
         h+=`<td style="white-space:nowrap;color:var(--text-muted);">${entry?r.user_name||'-':''}</td>`;
         h+=`<td style="white-space:nowrap;color:var(--text-muted);font-size:0.65rem;">${entry&&r.updated_at?new Date(r.updated_at).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</td></tr>`;
