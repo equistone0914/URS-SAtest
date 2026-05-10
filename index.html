@@ -37,8 +37,12 @@
 
         [data-theme="light"] ::-webkit-scrollbar-track { background: #edf0f4; }
         [data-theme="light"] ::-webkit-scrollbar-thumb { background: #c8d0da; }
-        [data-theme="light"] .auth-overlay { background: linear-gradient(135deg, #e8f0f8, #d1e3f0, #b8d4e8); }
-        [data-theme="light"] .login-btn { background: linear-gradient(135deg, #0077b6, #0096c7); }
+        [data-theme="light"] .auth-overlay { background: #e8f2f5; }
+        [data-theme="light"] .auth-overlay::before { background: radial-gradient(ellipse at center, rgba(0,150,136,0.06) 0%, rgba(200,220,230,0.3) 40%, transparent 70%); }
+        [data-theme="light"] .auth-overlay::after { background: radial-gradient(ellipse at center, rgba(180,210,220,0.4) 0%, rgba(200,220,230,0.2) 50%, transparent 70%); }
+        [data-theme="light"] .login-box { background: rgba(255,255,255,0.95); border-color: rgba(0,150,136,0.12); box-shadow: 0 20px 60px rgba(0,0,0,0.08); }
+        [data-theme="light"] .login-input { background: rgba(240,244,248,0.8); border-color: rgba(0,150,136,0.15); }
+        [data-theme="light"] .login-btn { background: linear-gradient(135deg, #0096c7, #009688); box-shadow: 0 4px 15px rgba(0,150,136,0.2); }
         [data-theme="light"] .period-inputs input[type="date"] { color-scheme: light; }
         [data-theme="light"] .report-filter input[type="date"] { color-scheme: light; }
         .theme-toggle { display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 4px 10px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-tertiary); font-size: 0.68rem; color: var(--text-secondary); transition: all 0.2s; }
@@ -50,14 +54,18 @@
         .user-menu-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
 
         /* Auth */
-        .auth-overlay { position: fixed; inset: 0; z-index: 9999; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); display: flex; align-items: center; justify-content: center; }
-        .login-box { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; padding: 44px; box-shadow: var(--shadow-glow); text-align: center; max-width: 380px; width: 90%; }
-        .login-box h2 { font-size: 1.5rem; color: var(--accent-cyan); margin-bottom: 4px; letter-spacing: 2px; }
-        .login-box p { color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 24px; }
-        .login-input { width: 100%; padding: 11px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9rem; font-family: inherit; background: var(--bg-tertiary); color: var(--text-primary); margin-bottom: 12px; }
-        .login-input:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(0,180,216,0.15); }
-        .login-btn { width: 100%; padding: 11px; border: none; border-radius: 8px; background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal)); color: #fff; font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: inherit; }
-        .login-btn:hover { filter: brightness(1.1); }
+        .auth-overlay { position: fixed; inset: 0; z-index: 9999; background: #2c4a54; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .auth-overlay::before { content: ''; position: absolute; width: 480px; height: 480px; background: radial-gradient(ellipse at center, rgba(72,202,228,0.08) 0%, rgba(44,74,84,0.4) 40%, transparent 70%); border-radius: 45% 55% 50% 50% / 55% 45% 55% 45%; animation: blobFloat 8s ease-in-out infinite; }
+        .auth-overlay::after { content: ''; position: absolute; width: 420px; height: 420px; background: radial-gradient(ellipse at center, rgba(30,60,70,0.6) 0%, rgba(44,74,84,0.3) 50%, transparent 70%); border-radius: 50% 45% 55% 45% / 45% 55% 45% 55%; animation: blobFloat 8s ease-in-out infinite reverse; }
+        @keyframes blobFloat { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(10px,-15px) scale(1.03);} }
+        .login-box { position: relative; z-index: 1; background: rgba(20,36,48,0.92); border: 1px solid rgba(72,202,228,0.12); border-radius: 18px; padding: 48px 44px; box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(72,202,228,0.05); text-align: center; max-width: 380px; width: 90%; backdrop-filter: blur(12px); }
+        .login-box .login-icon { margin-bottom: 16px; }
+        .login-box h2 { font-size: 1.5rem; color: var(--accent-cyan); margin-bottom: 4px; letter-spacing: 3px; font-weight: 600; }
+        .login-box p { color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 28px; letter-spacing: 0.5px; }
+        .login-input { width: 100%; padding: 12px 16px; border: 1px solid rgba(72,202,228,0.15); border-radius: 8px; font-size: 0.9rem; font-family: inherit; background: rgba(15,25,35,0.6); color: var(--text-primary); margin-bottom: 14px; transition: border-color 0.2s; }
+        .login-input:focus { outline: none; border-color: rgba(72,202,228,0.5); box-shadow: 0 0 0 3px rgba(72,202,228,0.08); }
+        .login-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; background: linear-gradient(135deg, #00b4d8, #2ec4b6); color: #fff; font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,180,216,0.25); }
+        .login-btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,180,216,0.35); }
         .login-error { color: var(--accent-red); font-size: 0.78rem; margin-top: 8px; display: none; }
 
         .app { display: none; } .app.visible { display: flex; height: 100vh; }
@@ -204,6 +212,7 @@
 <!-- Auth: Password Gate -->
 <div class="auth-overlay" id="auth-gate">
     <div class="login-box" id="pwd-box">
+        <div class="login-icon"><svg width="36" height="36" viewBox="0 0 64 64"><path d="M52 44c0-4-2-8-5-10l-2-8c-1-4-4-7-8-8l1-4c0-2-1-3-2-3s-2 1-3 3l-1 3c-3 0-6 1-8 3l-4-2c-2-1-4 0-4 2l1 5c-3 3-5 7-5 12v4c0 2 1 3 3 3h4l1 6c0 1 1 2 2 2h4c1 0 2-1 2-2l1-6h6l1 6c0 1 1 2 2 2h4c1 0 2-1 2-2l1-6h3c2 0 3-1 3-3v-2zm-16-24a2 2 0 110 4 2 2 0 010-4z" fill="#48cae4"/></svg></div>
         <h2>URS-SAtest</h2>
         <p>最小样本量计算器 · 内部工具</p>
         <input type="password" class="login-input" id="pwd-input" placeholder="请输入访问密码" onkeydown="if(event.key==='Enter')doLogin()">
@@ -211,6 +220,7 @@
         <div class="login-error" id="login-error">密码错误</div>
     </div>
     <div class="login-box" id="name-box" style="display:none;">
+        <div class="login-icon"><svg width="36" height="36" viewBox="0 0 64 64"><path d="M52 44c0-4-2-8-5-10l-2-8c-1-4-4-7-8-8l1-4c0-2-1-3-2-3s-2 1-3 3l-1 3c-3 0-6 1-8 3l-4-2c-2-1-4 0-4 2l1 5c-3 3-5 7-5 12v4c0 2 1 3 3 3h4l1 6c0 1 1 2 2 2h4c1 0 2-1 2-2l1-6h6l1 6c0 1 1 2 2 2h4c1 0 2-1 2-2l1-6h3c2 0 3-1 3-3v-2zm-16-24a2 2 0 110 4 2 2 0 010-4z" fill="#48cae4"/></svg></div>
         <h2>欢迎</h2>
         <p>请输入您的昵称或工号（用于标识录入人）</p>
         <input type="text" class="login-input" id="name-input" placeholder="昵称/工号" onkeydown="if(event.key==='Enter')doSetName()">
