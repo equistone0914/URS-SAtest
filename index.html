@@ -148,6 +148,8 @@
         .report-sticky-wrap .result-table .sticky-col { position: sticky; z-index: 3; background: var(--bg-card) !important; overflow: hidden; text-overflow: ellipsis; }
         .report-sticky-wrap .result-table thead .sticky-col { z-index: 5; background: var(--bg-tertiary) !important; }
         .report-sticky-wrap .result-table .sticky-col-last { box-shadow: 3px 0 6px -2px rgba(0,0,0,0.18); }
+        .report-sticky-wrap .result-table td:not(.sticky-col),
+        .report-sticky-wrap .result-table th:not(.sticky-col) { min-width: 62px; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
         .data-table th { padding: 6px 4px; background: var(--bg-tertiary); color: var(--text-secondary); font-weight: 600; font-size: 0.65rem; border-bottom: 2px solid var(--border-color); white-space: nowrap; text-align: center; position: sticky; top: 0; z-index: 10; }
         .data-table td { padding: 2px 2px; border-bottom: 1px solid var(--border-color); text-align: center; }
@@ -980,7 +982,7 @@ async function renderReport(){
 
     // Single table with sticky first 3 columns
     const STICKY_LEFT=[0,72,210]; // left offsets for cols 0,1,2
-    const STICKY_W=[72,138,54]; // fixed widths
+    const STICKY_W=[72,138,108]; // fixed widths
     let h='<div class="report-sticky-wrap"><table class="result-table"><thead>';
     // Row 1: group headers
     h+='<tr>';
