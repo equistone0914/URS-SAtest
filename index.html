@@ -114,7 +114,10 @@
         .custom-select .option-item.selected .checkbox { background: var(--accent-blue); border-color: var(--accent-blue); }
         .custom-select .option-item.selected .checkbox::after { content: '\2713'; color: #fff; font-size: 0.55rem; font-weight: 700; }
         .selected-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
-        .tag { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; background: var(--accent-dim); color: var(--accent-cyan); border-radius: 4px; font-size: 0.68rem; font-weight: 500; border: 1px solid rgba(0,180,216,0.3); }
+        .tag { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; background: var(--accent-dim); color: var(--accent-cyan); border-radius: 4px; font-size: 0.68rem; font-weight: 500; border: 1px solid rgba(0,180,216,0.3); cursor: grab; user-select: none; transition: opacity 0.15s; }
+        .tag:active { cursor: grabbing; }
+        .tag.dragging { opacity: 0.3; }
+        .tag.drag-over { border-color: var(--accent-cyan); box-shadow: 0 0 4px rgba(72,202,228,0.4); }
         .tag .tag-remove { cursor: pointer; font-size: 0.8rem; opacity: 0.6; }
         .tag .tag-remove:hover { opacity: 1; color: var(--accent-red); }
 
@@ -618,7 +621,7 @@ function renderSelectors(){
                     <div class="select-dropdown" id="mod-${g.id}"><input class="search-input" placeholder="搜索..." oninput="filterMods(${g.id},this.value)"><div class="options-list" id="modopts-${g.id}">${modOpts(g)}</div></div>
                 </div>
             </div>
-            <div class="selected-tags">${g.modules.map(m=>`<span class="tag">${m}<span class="tag-remove" onclick="rmMod(${g.id},'${m}')">&times;</span></span>`).join('')}</div>
+            <div class="selected-tags" id="tags-${g.id}">${g.modules.map((m,idx)=>`<span class="tag" draggable="true" data-gid="${g.id}" data-idx="${idx}" data-mod="${m}">${m}<span class="tag-remove" onclick="event.stopPropagation();rmMod(${g.id},'${m}')">&times;</span></span>`).join('')}</div>
         </div>`).join('');
 }
 function modOpts(g){return(MODULE_LIST[g.business]||[]).map(m=>`<div class="option-item ${g.modules.includes(m)?'selected':''}" onclick="togMod(${g.id},'${m}')"><div class="checkbox"></div><span>${m}</span></div>`).join('');}
@@ -628,6 +631,44 @@ document.addEventListener('click',e=>{if(!e.target.closest('.custom-select'))clo
 function selBiz(gid,b){const g=selectorGroups.find(x=>x.id===gid);g.business=b;saveMem();renderSelectors();}
 function togMod(gid,m){const g=selectorGroups.find(x=>x.id===gid);const i=g.modules.indexOf(m);if(i>=0)g.modules.splice(i,1);else g.modules.push(m);saveMem();renderSelectors();setTimeout(()=>document.getElementById('mod-'+gid).classList.add('open'),10);}
 function rmMod(gid,m){const g=selectorGroups.find(x=>x.id===gid);g.modules=g.modules.filter(x=>x!==m);saveMem();renderSelectors();}
+
+// Drag & drop reorder for module tags
+let dragState={gid:null,fromIdx:null};
+document.addEventListener('dragstart',e=>{
+    const tag=e.target.closest('.tag[draggable]');
+    if(!tag)return;
+    dragState.gid=parseInt(tag.dataset.gid);
+    dragState.fromIdx=parseInt(tag.dataset.idx);
+    tag.classList.add('dragging');
+    e.dataTransfer.effectAllowed='move';
+});
+document.addEventListener('dragover',e=>{
+    const tag=e.target.closest('.tag[draggable]');
+    if(!tag||parseInt(tag.dataset.gid)!==dragState.gid)return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect='move';
+    document.querySelectorAll('.tag.drag-over').forEach(t=>t.classList.remove('drag-over'));
+    tag.classList.add('drag-over');
+});
+document.addEventListener('dragleave',e=>{
+    const tag=e.target.closest('.tag[draggable]');
+    if(tag)tag.classList.remove('drag-over');
+});
+document.addEventListener('drop',e=>{
+    e.preventDefault();
+    const tag=e.target.closest('.tag[draggable]');
+    if(!tag||parseInt(tag.dataset.gid)!==dragState.gid)return;
+    const toIdx=parseInt(tag.dataset.idx);
+    if(dragState.fromIdx===toIdx)return;
+    const g=selectorGroups.find(x=>x.id===dragState.gid);
+    const moved=g.modules.splice(dragState.fromIdx,1)[0];
+    g.modules.splice(toIdx,0,moved);
+    saveMem();renderSelectors();
+});
+document.addEventListener('dragend',()=>{
+    document.querySelectorAll('.tag.dragging,.tag.drag-over').forEach(t=>t.classList.remove('dragging','drag-over'));
+    dragState={gid:null,fromIdx:null};
+});
 function filterMods(gid,q){const g=selectorGroups.find(x=>x.id===gid);const mods=(MODULE_LIST[g.business]||[]).filter(m=>m.toLowerCase().includes(q.toLowerCase()));document.getElementById('modopts-'+gid).innerHTML=mods.map(m=>`<div class="option-item ${g.modules.includes(m)?'selected':''}" onclick="togMod(${gid},'${m}')"><div class="checkbox"></div><span>${m}</span></div>`).join('');}
 
 // ==================== Table ====================
