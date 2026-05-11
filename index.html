@@ -860,22 +860,22 @@ function renderAllResults(){
     document.getElementById('suggestions').innerHTML=sugHtml;
 }
 
-function fmt4(v){return v!=null?v.toFixed(4):'-';}
+function fmt4(v){return v!=null?(v*100).toFixed(2)+'%':'-';}
 function buildExcelRow(r){
     const row=[];
     row.push(r.business,r.module,'-',r.periodLabel||'-');
     row.push(fpct(r.pTotal));PAGES.forEach(pg=>row.push(fpct(r.pageData[pg].p)));
     row.push(fi(r.nTotal));PAGES.forEach(pg=>row.push(fi(r.pageData[pg].n)));
     PAGES.forEach(pg=>row.push(fpct(r.pageData[pg].t)));
-    PAGES.forEach(pg=>row.push(r.pageData[pg].w!=null?Number(r.pageData[pg].w).toFixed(4):'-'));
-    row.push(r.mdeTarget!=null?Number(r.mdeTarget).toFixed(4):'-');
+    PAGES.forEach(pg=>row.push(r.pageData[pg].w!=null?fpct(r.pageData[pg].w):'-'));
+    row.push(r.mdeTarget!=null?fpct(r.mdeTarget):'-');
     row.push(fi(r.minNTotal));PAGES.forEach(pg=>row.push(fi(r.minNPages[pg])));
     row.push(fp(r.mdeTotal));PAGES.forEach(pg=>row.push(fp(r.mdePages[pg])));
     if(r.ciTotal){row.push(fp(r.ciTotal.mde),fp(r.ciTotal.ci90),fp(r.ciTotal.ci95),fp(r.ciTotal.ci99));}else{row.push('-','-','-','-');}
     PAGES.forEach(pg=>{if(r.ciPages[pg]){row.push(fp(r.ciPages[pg].mde),fp(r.ciPages[pg].ci90),fp(r.ciPages[pg].ci95),fp(r.ciPages[pg].ci99));}else{row.push('-','-','-','-');}});
     return row;
 }
-function fv(v){return v!=null?String(v):'-';}function fi(v){return v!=null?String(Math.round(v)):'-';}function fp(v){return v!=null?v.toFixed(4):'-';}function fpct(v){return v!=null?(v*100).toFixed(2)+'%':'-';}
+function fv(v){return v!=null?String(v):'-';}function fi(v){return v!=null?String(Math.round(v)):'-';}function fp(v){return v!=null?(v*100).toFixed(2)+'%':'-';}function fpct(v){return v!=null?(v*100).toFixed(2)+'%':'-';}
 
 // ==================== Copy ====================
 function copyResult(type){
@@ -1037,10 +1037,10 @@ async function renderReport(){
                     const nmin=parseFloat(v);
                     if(actualN&&nmin&&actualN<nmin)cls='cell-red';
                 }
-                if(i===33){if(v!=='-'&&parseFloat(v)>0.01)cls='cell-red';}
-                if(i>=34&&i<=38){if(v!=='-'&&parseFloat(v)>0.02)cls='cell-red';}
-                if(i===39){if(v!=='-'&&parseFloat(v)>0.01)cls='cell-red';}
-                if([43,47,51,55,59].includes(i)){if(v!=='-'&&parseFloat(v)>0.02)cls='cell-red';}
+                if(i===33){if(v!=='-'&&parseFloat(v)>1)cls='cell-red';}
+                if(i>=34&&i<=38){if(v!=='-'&&parseFloat(v)>2)cls='cell-red';}
+                if(i===39){if(v!=='-'&&parseFloat(v)>1)cls='cell-red';}
+                if([43,47,51,55,59].includes(i)){if(v!=='-'&&parseFloat(v)>2)cls='cell-red';}
             }
             const sc=vc<3;
             if(sc){
@@ -1094,14 +1094,14 @@ function buildReportRow(r,d){
     row.push(d.nTotal!=null?String(d.nTotal):'-');
     PAGES.forEach(pg=>row.push(d.pageData&&d.pageData[pg]&&d.pageData[pg].n!=null?String(d.pageData[pg].n):'-'));
     PAGES.forEach(pg=>row.push(d.pageData&&d.pageData[pg]&&d.pageData[pg].t!=null?fpct(d.pageData[pg].t):'-'));
-    PAGES.forEach(pg=>row.push(d.pageData&&d.pageData[pg]&&d.pageData[pg].w!=null?Number(d.pageData[pg].w).toFixed(4):'-'));
-    row.push(d.mdeTarget!=null?Number(d.mdeTarget).toFixed(4):'-');
+    PAGES.forEach(pg=>row.push(d.pageData&&d.pageData[pg]&&d.pageData[pg].w!=null?fpct(d.pageData[pg].w):'-'));
+    row.push(d.mdeTarget!=null?fpct(d.mdeTarget):'-');
     row.push(d.minNTotal!=null?String(d.minNTotal):'-');
     PAGES.forEach(pg=>row.push(d.minNPages&&d.minNPages[pg]!=null?String(d.minNPages[pg]):'-'));
-    row.push(d.mdeTotal!=null?d.mdeTotal.toFixed(4):'-');
-    PAGES.forEach(pg=>row.push(d.mdePages&&d.mdePages[pg]!=null?d.mdePages[pg].toFixed(4):'-'));
-    if(d.ciTotal){row.push(d.ciTotal.mde.toFixed(4),d.ciTotal.ci90.toFixed(4),d.ciTotal.ci95.toFixed(4),d.ciTotal.ci99.toFixed(4));}else{row.push('-','-','-','-');}
-    PAGES.forEach(pg=>{if(d.ciPages&&d.ciPages[pg]){row.push(d.ciPages[pg].mde.toFixed(4),d.ciPages[pg].ci90.toFixed(4),d.ciPages[pg].ci95.toFixed(4),d.ciPages[pg].ci99.toFixed(4));}else{row.push('-','-','-','-');}});
+    row.push(d.mdeTotal!=null?fpct(d.mdeTotal):'-');
+    PAGES.forEach(pg=>row.push(d.mdePages&&d.mdePages[pg]!=null?fpct(d.mdePages[pg]):'-'));
+    if(d.ciTotal){row.push(fpct(d.ciTotal.mde),fpct(d.ciTotal.ci90),fpct(d.ciTotal.ci95),fpct(d.ciTotal.ci99));}else{row.push('-','-','-','-');}
+    PAGES.forEach(pg=>{if(d.ciPages&&d.ciPages[pg]){row.push(fpct(d.ciPages[pg].mde),fpct(d.ciPages[pg].ci90),fpct(d.ciPages[pg].ci95),fpct(d.ciPages[pg].ci99));}else{row.push('-','-','-','-');}});
     return row;
 }
 
@@ -1195,7 +1195,6 @@ function exportReportAll(){
                 const s=String(v);
                 if(s.endsWith('%'))return `<td style="font-size:11px;">${s}</td>`;
                 if(/^\d+$/.test(s))return `<td style="font-size:11px;mso-number-format:'0';">${s}</td>`;
-                if(/^\d+\.\d+$/.test(s))return `<td style="font-size:11px;mso-number-format:'0.0000';">${s}</td>`;
                 return `<td style="font-size:11px;">${s}</td>`;
             }).join('')+`<td>${dr.user}</td><td>${dr.time}</td></tr>`;
         });
